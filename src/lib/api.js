@@ -10,6 +10,12 @@ export const api = {
     return res.json()
   },
 
+  async getTrashNotes() {
+    const res = await fetch(`${API_URL}/notes/trash`)
+    if (!res.ok) throw new Error('Failed to fetch trashed notes')
+    return res.json()
+  },
+
   async createNote(note) {
     const res = await fetch(`${API_URL}/notes`, {
       method: 'POST',
@@ -34,7 +40,31 @@ export const api = {
     const res = await fetch(`${API_URL}/notes/${id}`, {
       method: 'DELETE',
     })
-    if (!res.ok) throw new Error('Failed to delete note')
+    if (!res.ok) throw new Error('Failed to move note to trash')
+    return res.json()
+  },
+
+  async restoreNote(id) {
+    const res = await fetch(`${API_URL}/notes/${id}/restore`, {
+      method: 'PUT',
+    })
+    if (!res.ok) throw new Error('Failed to restore note')
+    return res.json()
+  },
+
+  async permanentDeleteNote(id) {
+    const res = await fetch(`${API_URL}/notes/${id}/permanent`, {
+      method: 'DELETE',
+    })
+    if (!res.ok) throw new Error('Failed to delete note permanently')
+    return res.json()
+  },
+
+  async emptyTrash() {
+    const res = await fetch(`${API_URL}/notes/trash/empty`, {
+      method: 'DELETE',
+    })
+    if (!res.ok) throw new Error('Failed to empty trash')
     return res.json()
   },
 

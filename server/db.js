@@ -46,13 +46,17 @@ export async function ensureDb() {
         color TEXT DEFAULT 'orange',
         category_id UUID REFERENCES categories(id) ON DELETE SET NULL,
         created_at TIMESTAMPTZ DEFAULT now(),
-        updated_at TIMESTAMPTZ DEFAULT now()
+        updated_at TIMESTAMPTZ DEFAULT now(),
+        deleted_at TIMESTAMPTZ DEFAULT NULL
       )
     `
 
-    // Add category_id if table existed before without column
+    // Add category_id & deleted_at if table existed before without columns
     await sql`
       ALTER TABLE notes ADD COLUMN IF NOT EXISTS category_id UUID REFERENCES categories(id) ON DELETE SET NULL;
+    `
+    await sql`
+      ALTER TABLE notes ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ DEFAULT NULL;
     `
 
     dbInitialized = true

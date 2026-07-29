@@ -5,6 +5,7 @@ import SearchBar from './components/SearchBar'
 import NoteGrid from './components/NoteGrid'
 import NoteEditor from './components/NoteEditor'
 import CategoryManager from './components/CategoryManager'
+import TrashView from './components/TrashView'
 
 const NOTE_COLORS = ['orange', 'salmon', 'green', 'blue', 'pink', 'yellow']
 
@@ -174,6 +175,13 @@ function App() {
             onUpdateCategory={handleUpdateCategory}
             onDeleteCategory={handleDeleteCategory}
             onBack={() => setView('dashboard')}
+          />
+        ) : view === 'trash' ? (
+          <TrashView
+            onRestoreNote={() => {
+              fetchNotes()
+              fetchCategories()
+            }}
           />
         ) : (
           <NoteEditor
