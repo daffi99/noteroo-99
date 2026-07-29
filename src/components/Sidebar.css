@@ -1,0 +1,107 @@
+.sidebar {
+  width: 64px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0;
+  box-sizing: border-box;
+  background-color: var(--bg-sidebar, #ffffff);
+  border-right: 1px solid var(--border-color, #e5e4e7);
+  flex-shrink: 0;
+}
+
+.sidebar__logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+}
+
+.sidebar__logo:hover {
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.sidebar__logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sidebar__add-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #ee5689 0%, #d62846 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 3px 10px rgba(238, 86, 137, 0.35);
+  padding: 0;
+  margin-bottom: 32px;
+}
+
+.sidebar__add-btn:hover {
+  transform: scale(1.08);
+  background: linear-gradient(135deg, #f06595 0%, #c41e3a 100%);
+  box-shadow: 0 5px 14px rgba(238, 86, 137, 0.5);
+}
+
+.sidebar__add-btn:active {
+  transform: scale(0.95);
+}
+
+.sidebar__add-btn:focus-visible {
+  outline: 2px solid #ee5689;
+  outline-offset: 2px;
+}
+
+.sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+}
+
+.sidebar__nav-item {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  color: #86868b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidebar__nav-item:hover {
+  background-color: #f5f5f7;
+  color: #1d1d1f;
+}
+
+.sidebar__nav-item--active {
+  background-color: #fde8ef;
+  color: #ee5689;
+}
+
+.sidebar__nav-item--active:hover {
+  background-color: #fbd5e2;
+  color: #d62846;
+}
