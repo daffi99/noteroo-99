@@ -4,6 +4,7 @@ import Placeholder from '@tiptap/extension-placeholder'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import Highlight from '@tiptap/extension-highlight'
+import { TextSelection } from '@tiptap/pm/state'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { exportNoteToTxt } from '../utils/export'
 import CategoryDropdown from './CategoryDropdown'
@@ -39,6 +40,68 @@ const CustomHighlight = Highlight.extend({
       'Mod-Shift-F': () => this.editor.commands.toggleHighlight({ color: '#fed7aa' }),
       'Mod-Shift-e': () => this.editor.commands.toggleHighlight({ color: '#e9d5ff' }),
       'Mod-Shift-E': () => this.editor.commands.toggleHighlight({ color: '#e9d5ff' }),
+      'Shift-Home': ({ editor }) => {
+        const sel = window.getSelection()
+        if (sel && sel.rangeCount > 0) {
+          sel.modify('extend', 'left', 'lineboundary')
+          const { state, dispatch } = editor.view
+          const domSel = editor.view.domSelection()
+          if (domSel && domSel.focusNode) {
+            const head = editor.view.posAtDOM(domSel.focusNode, domSel.focusOffset)
+            const anchor = editor.view.posAtDOM(domSel.anchorNode, domSel.anchorOffset)
+            if (typeof head === 'number' && typeof anchor === 'number') {
+              dispatch(state.tr.setSelection(TextSelection.create(state.doc, anchor, head)))
+            }
+          }
+        }
+        return true
+      },
+      'Home': ({ editor }) => {
+        const sel = window.getSelection()
+        if (sel) {
+          sel.modify('move', 'left', 'lineboundary')
+          const { state, dispatch } = editor.view
+          const domSel = editor.view.domSelection()
+          if (domSel && domSel.focusNode) {
+            const head = editor.view.posAtDOM(domSel.focusNode, domSel.focusOffset)
+            if (typeof head === 'number') {
+              dispatch(state.tr.setSelection(TextSelection.create(state.doc, head)))
+            }
+          }
+        }
+        return true
+      },
+      'Shift-End': ({ editor }) => {
+        const sel = window.getSelection()
+        if (sel && sel.rangeCount > 0) {
+          sel.modify('extend', 'right', 'lineboundary')
+          const { state, dispatch } = editor.view
+          const domSel = editor.view.domSelection()
+          if (domSel && domSel.focusNode) {
+            const head = editor.view.posAtDOM(domSel.focusNode, domSel.focusOffset)
+            const anchor = editor.view.posAtDOM(domSel.anchorNode, domSel.anchorOffset)
+            if (typeof head === 'number' && typeof anchor === 'number') {
+              dispatch(state.tr.setSelection(TextSelection.create(state.doc, anchor, head)))
+            }
+          }
+        }
+        return true
+      },
+      'End': ({ editor }) => {
+        const sel = window.getSelection()
+        if (sel) {
+          sel.modify('move', 'right', 'lineboundary')
+          const { state, dispatch } = editor.view
+          const domSel = editor.view.domSelection()
+          if (domSel && domSel.focusNode) {
+            const head = editor.view.posAtDOM(domSel.focusNode, domSel.focusOffset)
+            if (typeof head === 'number') {
+              dispatch(state.tr.setSelection(TextSelection.create(state.doc, head)))
+            }
+          }
+        }
+        return true
+      },
     }
   },
 })
@@ -115,6 +178,28 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
     setTitle(newTitle)
     if (editor) {
       debouncedSave(newTitle, editor.getJSON(), color, categoryId, isPinned)
+    }
+  }
+
+  const handleTitleKeyDown = (e) => {
+    if (e.key === 'Home') {
+      const input = e.target
+      if (e.shiftKey) {
+        e.preventDefault()
+        input.setSelectionRange(0, input.selectionEnd)
+      } else {
+        e.preventDefault()
+        input.setSelectionRange(0, 0)
+      }
+    } else if (e.key === 'End') {
+      const input = e.target
+      if (e.shiftKey) {
+        e.preventDefault()
+        input.setSelectionRange(input.selectionStart, input.value.length)
+      } else {
+        e.preventDefault()
+        input.setSelectionRange(input.value.length, input.value.length)
+      }
     }
   }
 
@@ -234,6 +319,7 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
         className="editor-title-input"
         value={title}
         onChange={handleTitleChange}
+        onKeyDown={handleTitleKeyDown}
         placeholder="Note title..."
         rows={1}
       />
