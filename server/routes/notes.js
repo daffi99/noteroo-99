@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
       FROM notes n
       LEFT JOIN categories c ON n.category_id = c.id
       WHERE n.deleted_at IS NULL
-      ORDER BY n.updated_at DESC
+      ORDER BY n.is_pinned DESC, n.pinned_at ASC NULLS LAST, n.updated_at DESC
     `
     res.json(notes)
   } catch (err) {
@@ -70,10 +70,24 @@ router.get('/:id', async (req, res) => {
 // POST create note
 router.post('/', async (req, res) => {
   try {
-    const { title = 'Untitled', content = null, color = 'orange', category_id = null } = req.body
+    const { title = 'Untitled', content = null, color = 'orange', category_id = null, is_pinned = false } = req.body
+    if (is_pinned) {
+      const [{ count }] = await sql`SELECT count(*)::int as count FROM notes WHERE is_pinned = true AND deleted_at IS NULL`
+      if (count >= 3) {
+        return res.status(400).json({ error: 'Maximum limit of 3 pinned notes reached' })
+      }
+    }
+
     const [created] = await sql`
-      INSERT INTO notes (title, content, color, category_id)
-      VALUES (${title}, ${content ? JSON.stringify(content) : null}::jsonb, ${color}, ${category_id || null})
+      INSERT INTO notes (title, content, color, category_id, is_pinned, pinned_at)
+      VALUES (
+        ${title},
+        ${content ? JSON.stringify(content) : null}::jsonb,
+        ${color},
+        ${category_id || null},
+        ${Boolean(is_pinned)},
+        ${is_pinned ? sql`now()` : null}
+      )
       RETURNING *
     `
     
@@ -95,18 +109,47 @@ router.post('/', async (req, res) => {
 // PUT update note
 router.put('/:id', async (req, res) => {
   try {
-    const { title, content, color, category_id } = req.body
+    const { title, content, color, category_id, is_pinned } = req.body
+
+    // Check pinned limit if setting is_pinned = true
+    if (is_pinned === true) {
+      const [{ count }] = await sql`
+        SELECT count(*)::int as count FROM notes 
+        WHERE is_pinned = true AND deleted_at IS NULL AND id != ${req.params.id}
+      `
+      if (count >= 3) {
+        return res.status(400).json({ error: 'Maximum limit of 3 pinned notes reached' })
+      }
+    }
+
+    const [existingNote] = await sql`SELECT * FROM notes WHERE id = ${req.params.id}`
+    if (!existingNote) return res.status(404).json({ error: 'Note not found' })
+
+    const updatedTitle = title !== undefined ? title : existingNote.title
+    const updatedContent = content !== undefined ? content : existingNote.content
+    const updatedColor = color !== undefined ? color : existingNote.color
+    const updatedCategoryId = category_id !== undefined ? category_id : existingNote.category_id
+    const updatedIsPinned = is_pinned !== undefined ? Boolean(is_pinned) : Boolean(existingNote.is_pinned)
+
+    let pinnedAtValue = existingNote.pinned_at
+    if (updatedIsPinned && !existingNote.is_pinned) {
+      pinnedAtValue = new Date().toISOString()
+    } else if (!updatedIsPinned && existingNote.is_pinned) {
+      pinnedAtValue = null
+    }
+
     const [updated] = await sql`
       UPDATE notes
-      SET title = ${title},
-          content = ${content ? JSON.stringify(content) : null}::jsonb,
-          color = ${color},
-          category_id = ${category_id || null},
+      SET title = ${updatedTitle},
+          content = ${updatedContent ? JSON.stringify(updatedContent) : null}::jsonb,
+          color = ${updatedColor},
+          category_id = ${updatedCategoryId || null},
+          is_pinned = ${updatedIsPinned},
+          pinned_at = ${pinnedAtValue},
           updated_at = now()
       WHERE id = ${req.params.id}
       RETURNING *
     `
-    if (!updated) return res.status(404).json({ error: 'Note not found' })
 
     const [note] = await sql`
       SELECT 

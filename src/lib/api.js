@@ -22,18 +22,20 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(note),
     })
-    if (!res.ok) throw new Error('Failed to create note')
-    return res.json()
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Failed to create note')
+    return data
   },
 
-  async updateNote(id, data) {
+  async updateNote(id, noteData) {
     const res = await fetch(`${API_URL}/notes/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      body: JSON.stringify(noteData),
     })
-    if (!res.ok) throw new Error('Failed to update note')
-    return res.json()
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Failed to update note')
+    return data
   },
 
   async deleteNote(id) {

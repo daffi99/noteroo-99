@@ -1,18 +1,20 @@
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
+import TaskList from '@tiptap/extension-task-list'
+import TaskItem from '@tiptap/extension-task-item'
+import Highlight from '@tiptap/extension-highlight'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { exportNoteToTxt } from '../utils/export'
 import CategoryDropdown from './CategoryDropdown'
-import ConfirmModal from './ConfirmModal'
 
-const COLORS = [
-  { name: 'orange', label: 'Orange' },
-  { name: 'salmon', label: 'Salmon' },
-  { name: 'green', label: 'Green' },
-  { name: 'blue', label: 'Blue' },
-  { name: 'pink', label: 'Pink' },
-  { name: 'yellow', label: 'Yellow' },
+const HIGHLIGHT_COLORS = [
+  { name: 'Yellow', color: '#fef08a' },
+  { name: 'Green', color: '#bbf7d0' },
+  { name: 'Pink', color: '#fbcfe8' },
+  { name: 'Blue', color: '#bfdbfe' },
+  { name: 'Purple', color: '#e9d5ff' },
+  { name: 'Orange', color: '#fed7aa' },
 ]
 
 function ToolbarButton({ onClick, isActive, children, title }) {
@@ -28,25 +30,39 @@ function ToolbarButton({ onClick, isActive, children, title }) {
   )
 }
 
-export default function NoteEditor({ note, categories = [], onSave, onBack, onDelete }) {
-  const [title, setTitle] = useState(note?.title || '')
-  const [color, setColor] = useState(note?.color || 'orange')
-  const [categoryId, setCategoryId] = useState(note?.category_id || '')
-  const [isSaving, setIsSaving] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const saveTimeoutRef = useRef(null)
-
-  const handleConfirmDelete = async () => {
-    setIsDeleting(true)
-    try {
-      await onDelete(note.id)
-    } catch (err) {
-      console.error('Error deleting note:', err)
-      setIsDeleting(false)
-      setShowDeleteModal(false)
+const CustomHighlight = Highlight.extend({
+  addKeyboardShortcuts() {
+    return {
+      'Mod-Shift-d': () => this.editor.commands.toggleHighlight({ color: '#fef08a' }),
+      'Mod-Shift-D': () => this.editor.commands.toggleHighlight({ color: '#fef08a' }),
+      'Mod-Shift-f': () => this.editor.commands.toggleHighlight({ color: '#fed7aa' }),
+      'Mod-Shift-F': () => this.editor.commands.toggleHighlight({ color: '#fed7aa' }),
     }
-  }
+  },
+})
+
+export default function NoteEditor({ note, categories = [], onSave, onBack, onDelete, onTogglePin, canPinMore = true }) {
+  const [title, setTitle] = useState(note?.title || '')
+  const color = note?.color || 'orange'
+  const [categoryId, setCategoryId] = useState(note?.category_id || '')
+  const [isPinned, setIsPinned] = useState(Boolean(note?.is_pinned))
+  const [isSaving, setIsSaving] = useState(false)
+  const [showHighlightMenu, setShowHighlightMenu] = useState(false)
+  const highlightMenuRef = useRef(null)
+  const saveTimeoutRef = useRef(null)
+  const titleTextareaRef = useRef(null)
+
+  const adjustTitleHeight = useCallback(() => {
+    const textarea = titleTextareaRef.current
+    if (textarea) {
+      textarea.style.height = 'auto'
+      textarea.style.height = `${textarea.scrollHeight}px`
+    }
+  }, [])
+
+  useEffect(() => {
+    adjustTitleHeight()
+  }, [title, adjustTitleHeight])
 
   const editor = useEditor({
     extensions: [
@@ -56,15 +72,22 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
       Placeholder.configure({
         placeholder: 'Start writing your note...',
       }),
+      TaskList,
+      TaskItem.configure({
+        nested: true,
+      }),
+      CustomHighlight.configure({
+        multicolor: true,
+      }),
     ],
     content: note?.content || '',
     onUpdate: ({ editor }) => {
-      debouncedSave(title, editor.getJSON(), color, categoryId)
+      debouncedSave(title, editor.getJSON(), color, categoryId, isPinned)
     },
   })
 
   const debouncedSave = useCallback(
-    (titleVal, contentVal, colorVal, categoryIdVal) => {
+    (titleVal, contentVal, colorVal, categoryIdVal, pinnedVal) => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current)
       }
@@ -76,6 +99,7 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
           content: contentVal,
           color: colorVal,
           category_id: categoryIdVal || null,
+          is_pinned: Boolean(pinnedVal),
         }).finally(() => {
           setTimeout(() => setIsSaving(false), 500)
         })
@@ -88,14 +112,7 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
     const newTitle = e.target.value
     setTitle(newTitle)
     if (editor) {
-      debouncedSave(newTitle, editor.getJSON(), color, categoryId)
-    }
-  }
-
-  const handleColorChange = (newColor) => {
-    setColor(newColor)
-    if (editor) {
-      debouncedSave(title, editor.getJSON(), newColor, categoryId)
+      debouncedSave(newTitle, editor.getJSON(), color, categoryId, isPinned)
     }
   }
 
@@ -103,9 +120,36 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
     const newCatId = typeof val === 'object' && val !== null && 'target' in val ? val.target.value : val
     setCategoryId(newCatId)
     if (editor) {
-      debouncedSave(title, editor.getJSON(), color, newCatId)
+      debouncedSave(title, editor.getJSON(), color, newCatId, isPinned)
     }
   }
+
+  const handlePinToggle = async () => {
+    const targetPinnedState = !isPinned
+    if (onTogglePin) {
+      const success = await onTogglePin({ ...note, is_pinned: isPinned })
+      if (success) {
+        setIsPinned(targetPinnedState)
+      }
+    } else {
+      setIsPinned(targetPinnedState)
+      if (editor) {
+        debouncedSave(title, editor.getJSON(), color, categoryId, targetPinnedState)
+      }
+    }
+  }
+
+  // Close highlight popover on click outside
+  useEffect(() => {
+    if (!showHighlightMenu) return
+    function handleClickOutside(event) {
+      if (highlightMenuRef.current && !highlightMenuRef.current.contains(event.target)) {
+        setShowHighlightMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showHighlightMenu])
 
   useEffect(() => {
     return () => {
@@ -127,10 +171,32 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
           </svg>
           <span>Back</span>
         </button>
+
         <div className="editor-topbar__right">
           <span className={`save-indicator ${isSaving ? 'save-indicator--saving' : ''}`}>
             {isSaving ? 'Saving...' : 'Saved'}
           </span>
+
+          {(isPinned || canPinMore) && (
+            <button
+              className={`editor-pin-btn ${isPinned ? 'editor-pin-btn--active' : ''}`}
+              onClick={handlePinToggle}
+              title={isPinned ? 'Unpin note' : 'Pin note (Max 3)'}
+              type="button"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z" />
+              </svg>
+              <span>{isPinned ? 'Pinned' : 'Pin'}</span>
+            </button>
+          )}
+
+          <CategoryDropdown
+            categories={categories}
+            value={categoryId}
+            onChange={handleCategoryChange}
+          />
+
           <button
             className="editor-export-btn"
             onClick={() =>
@@ -151,7 +217,8 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
             </svg>
             <span>Export TXT</span>
           </button>
-          <button className="editor-delete-btn" onClick={() => setShowDeleteModal(true)} title="Delete note">
+
+          <button className="editor-delete-btn" onClick={() => onDelete && onDelete(note)} title="Delete note">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="3 6 5 6 21 6" />
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
@@ -160,47 +227,27 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
         </div>
       </div>
 
-      <div className="editor-meta-bar">
-        <div className="color-picker">
-          {COLORS.map((c) => (
-            <button
-              key={c.name}
-              className={`color-picker__swatch color-picker__swatch--${c.name} ${color === c.name ? 'color-picker__swatch--active' : ''}`}
-              onClick={() => handleColorChange(c.name)}
-              title={c.label}
-              aria-label={`Set color to ${c.label}`}
-            />
-          ))}
-        </div>
-
-        <CategoryDropdown
-          categories={categories}
-          value={categoryId}
-          onChange={handleCategoryChange}
-        />
-      </div>
-
-      <input
+      <textarea
+        ref={titleTextareaRef}
         className="editor-title-input"
-        type="text"
         value={title}
         onChange={handleTitleChange}
         placeholder="Note title..."
-        autoFocus
+        rows={1}
       />
 
       <div className="editor-toolbar">
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
           isActive={editor.isActive('bold')}
-          title="Bold"
+          title="Bold (Ctrl+B)"
         >
           <strong>B</strong>
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleItalic().run()}
           isActive={editor.isActive('italic')}
-          title="Italic"
+          title="Italic (Ctrl+I)"
         >
           <em>I</em>
         </ToolbarButton>
@@ -211,6 +258,53 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
         >
           <s>S</s>
         </ToolbarButton>
+
+        {/* Highlight Tool with Multi-color Dropdown */}
+        <div className="toolbar-dropdown-wrapper" ref={highlightMenuRef}>
+          <ToolbarButton
+            onClick={() => setShowHighlightMenu((prev) => !prev)}
+            isActive={editor.isActive('highlight')}
+            title="Highlight Text (Cmd+Shift+D)"
+          >
+            <span className="highlight-icon-mark">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m9 11-6 6v3h3l6-6" />
+                <path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4" />
+              </svg>
+            </span>
+          </ToolbarButton>
+
+          {showHighlightMenu && (
+            <div className="highlight-menu" role="menu">
+              <div className="highlight-menu__title">Highlight Color</div>
+              <div className="highlight-menu__grid">
+                {HIGHLIGHT_COLORS.map((hc) => (
+                  <button
+                    key={hc.name}
+                    type="button"
+                    className="highlight-menu__swatch"
+                    style={{ backgroundColor: hc.color }}
+                    title={hc.name}
+                    onClick={() => {
+                      editor.chain().focus().toggleHighlight({ color: hc.color }).run()
+                      setShowHighlightMenu(false)
+                    }}
+                  />
+                ))}
+              </div>
+              <button
+                type="button"
+                className="highlight-menu__clear-btn"
+                onClick={() => {
+                  editor.chain().focus().unsetHighlight().run()
+                  setShowHighlightMenu(false)
+                }}
+              >
+                Clear Highlight
+              </button>
+            </div>
+          )}
+        </div>
 
         <div className="toolbar-divider" />
 
@@ -237,6 +331,18 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
         </ToolbarButton>
 
         <div className="toolbar-divider" />
+
+        {/* Checklist (Task List) */}
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleTaskList().run()}
+          isActive={editor.isActive('taskList')}
+          title="Checklist / Task List (Mod+Shift+9)"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 11 12 14 22 4" />
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+          </svg>
+        </ToolbarButton>
 
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBulletList().run()}
@@ -302,18 +408,6 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
       <div className="editor-content-wrapper">
         <EditorContent editor={editor} className="editor-content" />
       </div>
-
-      <ConfirmModal
-        isOpen={showDeleteModal}
-        title="Delete Note?"
-        message={title.trim() ? `Are you sure you want to delete "${title}"? This action cannot be undone.` : 'Are you sure you want to delete this note? This action cannot be undone.'}
-        confirmText="Delete Note"
-        cancelText="Cancel"
-        danger={true}
-        isLoading={isDeleting}
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setShowDeleteModal(false)}
-      />
     </div>
   )
 }

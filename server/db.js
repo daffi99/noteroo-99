@@ -45,18 +45,25 @@ export async function ensureDb() {
         content JSONB DEFAULT NULL,
         color TEXT DEFAULT 'orange',
         category_id UUID REFERENCES categories(id) ON DELETE SET NULL,
+        is_pinned BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMPTZ DEFAULT now(),
         updated_at TIMESTAMPTZ DEFAULT now(),
         deleted_at TIMESTAMPTZ DEFAULT NULL
       )
     `
 
-    // Add category_id & deleted_at if table existed before without columns
+    // Add category_id & deleted_at & is_pinned if table existed before without columns
     await sql`
       ALTER TABLE notes ADD COLUMN IF NOT EXISTS category_id UUID REFERENCES categories(id) ON DELETE SET NULL;
     `
     await sql`
       ALTER TABLE notes ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ DEFAULT NULL;
+    `
+    await sql`
+      ALTER TABLE notes ADD COLUMN IF NOT EXISTS is_pinned BOOLEAN DEFAULT FALSE;
+    `
+    await sql`
+      ALTER TABLE notes ADD COLUMN IF NOT EXISTS pinned_at TIMESTAMPTZ DEFAULT NULL;
     `
 
     dbInitialized = true

@@ -1,11 +1,19 @@
 import { useState } from 'react'
 import NoteCard from './NoteCard'
 
-export default function NoteGrid({ notes, categories = [], onNoteClick, searchQuery, onManageCategories }) {
+export default function NoteGrid({
+  notes,
+  categories = [],
+  onNoteClick,
+  searchQuery,
+  onTogglePin,
+  onDeleteNote,
+  onChangeColor,
+}) {
   const [selectedCategory, setSelectedCategory] = useState('all')
 
   const filteredNotes = notes.filter((note) => {
-    const matchesSearch = note.title.toLowerCase().includes((searchQuery || '').toLowerCase())
+    const matchesSearch = (note.title || '').toLowerCase().includes((searchQuery || '').toLowerCase())
     if (!matchesSearch) return false
 
     if (selectedCategory === 'all') return true
@@ -13,9 +21,27 @@ export default function NoteGrid({ notes, categories = [], onNoteClick, searchQu
     return note.category_id === selectedCategory
   })
 
+  // Unified list: pinned notes first (top-left), followed by unpinned notes
+  const sortedNotes = [...filteredNotes].sort((a, b) => {
+    if (Boolean(a.is_pinned) !== Boolean(b.is_pinned)) {
+      return (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0)
+    }
+    if (a.is_pinned && b.is_pinned) {
+      const timeA = a.pinned_at ? new Date(a.pinned_at).getTime() : 0
+      const timeB = b.pinned_at ? new Date(b.pinned_at).getTime() : 0
+      return timeA - timeB
+    }
+    const timeA = a.updated_at ? new Date(a.updated_at).getTime() : 0
+    const timeB = b.updated_at ? new Date(b.updated_at).getTime() : 0
+    return timeB - timeA
+  })
+
+  const totalPinnedInApp = notes.filter((n) => n.is_pinned).length
+  const canPinMore = totalPinnedInApp < 3
+
   return (
     <div className="note-grid-container">
-      {/* Category Bar Row (Filter Tabs + Manage Categories Button) */}
+      {/* Category Bar Row (Filter Tabs) */}
       <div className="category-bar-row">
         <div className="category-tabs">
           <button
@@ -48,7 +74,7 @@ export default function NoteGrid({ notes, categories = [], onNoteClick, searchQu
         </div>
       </div>
 
-      {filteredNotes.length === 0 ? (
+      {sortedNotes.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state__icon">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" opacity="0.3">
@@ -69,11 +95,15 @@ export default function NoteGrid({ notes, categories = [], onNoteClick, searchQu
         </div>
       ) : (
         <div className="note-grid">
-          {filteredNotes.map((note, index) => (
+          {sortedNotes.map((note, index) => (
             <NoteCard
               key={note.id}
               note={note}
               onClick={onNoteClick}
+              onTogglePin={onTogglePin}
+              onDeleteNote={onDeleteNote}
+              onChangeColor={onChangeColor}
+              canPinMore={canPinMore}
               style={{ animationDelay: `${index * 0.05}s` }}
             />
           ))}
