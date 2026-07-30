@@ -37,6 +37,8 @@ const CustomHighlight = Highlight.extend({
       'Mod-Shift-D': () => this.editor.commands.toggleHighlight({ color: '#fef08a' }),
       'Mod-Shift-f': () => this.editor.commands.toggleHighlight({ color: '#fed7aa' }),
       'Mod-Shift-F': () => this.editor.commands.toggleHighlight({ color: '#fed7aa' }),
+      'Mod-Shift-e': () => this.editor.commands.toggleHighlight({ color: '#e9d5ff' }),
+      'Mod-Shift-E': () => this.editor.commands.toggleHighlight({ color: '#e9d5ff' }),
     }
   },
 })
