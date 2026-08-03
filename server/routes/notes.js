@@ -1,9 +1,13 @@
 import { Router } from 'express'
 import { sql } from '../db.js'
+import { authenticate } from '../middleware/auth.js'
 
 const router = Router()
 
-// GET active notes (not trashed)
+// Require authentication for all note routes
+router.use(authenticate)
+
+// GET active notes for authenticated user strictly
 router.get('/', async (req, res) => {
   try {
     const notes = await sql`
@@ -13,7 +17,7 @@ router.get('/', async (req, res) => {
         c.color as category_color
       FROM notes n
       LEFT JOIN categories c ON n.category_id = c.id
-      WHERE n.deleted_at IS NULL
+      WHERE n.deleted_at IS NULL AND n.user_id = ${req.user.id}
       ORDER BY n.is_pinned DESC, n.pinned_at ASC NULLS LAST, n.updated_at DESC
     `
     res.json(notes)
@@ -22,13 +26,14 @@ router.get('/', async (req, res) => {
   }
 })
 
-// GET trashed notes (auto-purges >30 days old notes)
+// GET trashed notes strictly for authenticated user
 router.get('/trash', async (req, res) => {
   try {
-    // Purge notes that have been in trash for over 30 days
+    // Purge notes in trash for > 30 days for this user
     await sql`
       DELETE FROM notes 
       WHERE deleted_at IS NOT NULL 
+        AND user_id = ${req.user.id}
         AND deleted_at < NOW() - INTERVAL '30 days'
     `
 
@@ -39,7 +44,7 @@ router.get('/trash', async (req, res) => {
         c.color as category_color
       FROM notes n
       LEFT JOIN categories c ON n.category_id = c.id
-      WHERE n.deleted_at IS NOT NULL
+      WHERE n.deleted_at IS NOT NULL AND n.user_id = ${req.user.id}
       ORDER BY n.deleted_at DESC
     `
     res.json(trashedNotes)
@@ -48,7 +53,7 @@ router.get('/trash', async (req, res) => {
   }
 })
 
-// GET single note
+// GET single note strictly for authenticated user
 router.get('/:id', async (req, res) => {
   try {
     const [note] = await sql`
@@ -58,7 +63,7 @@ router.get('/:id', async (req, res) => {
         c.color as category_color
       FROM notes n
       LEFT JOIN categories c ON n.category_id = c.id
-      WHERE n.id = ${req.params.id}
+      WHERE n.id = ${req.params.id} AND n.user_id = ${req.user.id}
     `
     if (!note) return res.status(404).json({ error: 'Note not found' })
     res.json(note)
@@ -67,24 +72,28 @@ router.get('/:id', async (req, res) => {
   }
 })
 
-// POST create note
+// POST create note for authenticated user
 router.post('/', async (req, res) => {
   try {
     const { title = 'Untitled', content = null, color = 'orange', category_id = null, is_pinned = false } = req.body
     if (is_pinned) {
-      const [{ count }] = await sql`SELECT count(*)::int as count FROM notes WHERE is_pinned = true AND deleted_at IS NULL`
+      const [{ count }] = await sql`
+        SELECT count(*)::int as count FROM notes 
+        WHERE is_pinned = true AND deleted_at IS NULL AND user_id = ${req.user.id}
+      `
       if (count >= 3) {
         return res.status(400).json({ error: 'Maximum limit of 3 pinned notes reached' })
       }
     }
 
     const [created] = await sql`
-      INSERT INTO notes (title, content, color, category_id, is_pinned, pinned_at)
+      INSERT INTO notes (title, content, color, category_id, user_id, is_pinned, pinned_at)
       VALUES (
         ${title},
         ${content ? JSON.stringify(content) : null}::jsonb,
         ${color},
         ${category_id || null},
+        ${req.user.id},
         ${Boolean(is_pinned)},
         ${is_pinned ? sql`now()` : null}
       )
@@ -106,23 +115,24 @@ router.post('/', async (req, res) => {
   }
 })
 
-// PUT update note
+// PUT update note strictly for authenticated user
 router.put('/:id', async (req, res) => {
   try {
     const { title, content, color, category_id, is_pinned } = req.body
 
-    // Check pinned limit if setting is_pinned = true
     if (is_pinned === true) {
       const [{ count }] = await sql`
         SELECT count(*)::int as count FROM notes 
-        WHERE is_pinned = true AND deleted_at IS NULL AND id != ${req.params.id}
+        WHERE is_pinned = true AND deleted_at IS NULL AND id != ${req.params.id} AND user_id = ${req.user.id}
       `
       if (count >= 3) {
         return res.status(400).json({ error: 'Maximum limit of 3 pinned notes reached' })
       }
     }
 
-    const [existingNote] = await sql`SELECT * FROM notes WHERE id = ${req.params.id}`
+    const [existingNote] = await sql`
+      SELECT * FROM notes WHERE id = ${req.params.id} AND user_id = ${req.user.id}
+    `
     if (!existingNote) return res.status(404).json({ error: 'Note not found' })
 
     const updatedTitle = title !== undefined ? title : existingNote.title
@@ -144,10 +154,11 @@ router.put('/:id', async (req, res) => {
           content = ${updatedContent ? JSON.stringify(updatedContent) : null}::jsonb,
           color = ${updatedColor},
           category_id = ${updatedCategoryId || null},
+          user_id = ${req.user.id},
           is_pinned = ${updatedIsPinned},
           pinned_at = ${pinnedAtValue},
           updated_at = now()
-      WHERE id = ${req.params.id}
+      WHERE id = ${req.params.id} AND user_id = ${req.user.id}
       RETURNING *
     `
 
@@ -166,13 +177,13 @@ router.put('/:id', async (req, res) => {
   }
 })
 
-// PUT restore note from trash
+// PUT restore note from trash strictly for authenticated user
 router.put('/:id/restore', async (req, res) => {
   try {
     const [restored] = await sql`
       UPDATE notes
       SET deleted_at = NULL
-      WHERE id = ${req.params.id}
+      WHERE id = ${req.params.id} AND user_id = ${req.user.id}
       RETURNING *
     `
     if (!restored) return res.status(404).json({ error: 'Note not found' })
@@ -182,11 +193,11 @@ router.put('/:id/restore', async (req, res) => {
   }
 })
 
-// DELETE empty trash (permanently delete all trashed notes)
+// DELETE empty trash strictly for authenticated user
 router.delete('/trash/empty', async (req, res) => {
   try {
     await sql`
-      DELETE FROM notes WHERE deleted_at IS NOT NULL
+      DELETE FROM notes WHERE deleted_at IS NOT NULL AND user_id = ${req.user.id}
     `
     res.json({ message: 'Trash emptied' })
   } catch (err) {
@@ -194,11 +205,11 @@ router.delete('/trash/empty', async (req, res) => {
   }
 })
 
-// DELETE note permanently from trash
+// DELETE note permanently from trash strictly for authenticated user
 router.delete('/:id/permanent', async (req, res) => {
   try {
     const [note] = await sql`
-      DELETE FROM notes WHERE id = ${req.params.id} RETURNING *
+      DELETE FROM notes WHERE id = ${req.params.id} AND user_id = ${req.user.id} RETURNING *
     `
     if (!note) return res.status(404).json({ error: 'Note not found' })
     res.json({ message: 'Note permanently deleted' })
@@ -207,11 +218,11 @@ router.delete('/:id/permanent', async (req, res) => {
   }
 })
 
-// DELETE move note to trash (soft delete)
+// DELETE move note to trash (soft delete) strictly for authenticated user
 router.delete('/:id', async (req, res) => {
   try {
     const [note] = await sql`
-      UPDATE notes SET deleted_at = NOW() WHERE id = ${req.params.id} RETURNING *
+      UPDATE notes SET deleted_at = NOW() WHERE id = ${req.params.id} AND user_id = ${req.user.id} RETURNING *
     `
     if (!note) return res.status(404).json({ error: 'Note not found' })
     res.json({ message: 'Note moved to trash' })

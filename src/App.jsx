@@ -8,10 +8,15 @@ import CategoryManager from './components/CategoryManager'
 import TrashView from './components/TrashView'
 import Toast from './components/Toast'
 import ConfirmModal from './components/ConfirmModal'
+import AuthModal from './components/AuthModal'
+import ProfileModal from './components/ProfileModal'
 
 const NOTE_COLORS = ['orange', 'salmon', 'green', 'blue', 'pink', 'yellow']
 
 function App() {
+  const [user, setUser] = useState(null)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [notes, setNotes] = useState([])
   const [categories, setCategories] = useState([])
   const [activeNote, setActiveNote] = useState(null)
@@ -20,10 +25,58 @@ function App() {
   const [view, setView] = useState('dashboard') // 'dashboard' | 'editor' | 'categories' | 'trash'
   const [toast, setToast] = useState({ message: '', type: 'warning' })
 
-  // Fetch notes & categories on mount
+  // Check auth session on mount
   useEffect(() => {
-    loadData()
+    checkAuth()
   }, [])
+
+  const checkAuth = async () => {
+    setIsCheckingAuth(true)
+    try {
+      const data = await api.getMe()
+      setUser(data.user)
+      await loadData()
+    } catch {
+      setUser(null)
+      setIsLoading(false)
+    } finally {
+      setIsCheckingAuth(false)
+    }
+  }
+
+  const handleAuthAction = async (actionType, credentials) => {
+    if (actionType === 'login') {
+      const res = await api.login(credentials)
+      setUser(res.user)
+      await loadData()
+      return res
+    } else {
+      const res = await api.register(credentials)
+      setUser(res.user)
+      await loadData()
+      return res
+    }
+  }
+
+  const handleSaveProfile = async (profileData) => {
+    const res = await api.updateProfile(profileData)
+    setUser(res.user)
+    setToast({ message: 'Profile updated successfully!', type: 'info' })
+  }
+
+  const handleLogout = async () => {
+    try {
+      await api.logout()
+    } catch (err) {
+      console.error('Logout error:', err)
+    } finally {
+      setUser(null)
+      setNotes([])
+      setCategories([])
+      setActiveNote(null)
+      setView('dashboard')
+    }
+  }
 
   const loadData = async () => {
     setIsLoading(true)
@@ -106,7 +159,7 @@ function App() {
         sortNotes(prev.map((n) => (n.id === saved.id ? saved : n)))
       )
       setActiveNote(saved)
-      fetchCategories() // Update note counts
+      fetchCategories()
     } catch (err) {
       console.error('Error saving note:', err)
       if (err.message && err.message.includes('pinned')) {
@@ -210,7 +263,7 @@ function App() {
     setCategories((prev) =>
       prev.map((c) => (c.id === id ? { ...c, ...updated } : c))
     )
-    fetchNotes() // Refresh notes to get updated category names/colors
+    fetchNotes()
   }
 
   const handleDeleteCategory = async (id) => {
@@ -230,12 +283,33 @@ function App() {
     fetchNotes()
   }
 
+  if (isCheckingAuth) {
+    return (
+      <div className="auth-loading-screen">
+        <div className="loading-spinner" />
+        <p>Loading Noteroo...</p>
+      </div>
+    )
+  }
+
   return (
     <div className="app">
       <Toast
         message={toast.message}
         type={toast.type}
         onClose={() => setToast({ message: '', type: 'warning' })}
+      />
+
+      <AuthModal
+        isOpen={!user}
+        onAuthSuccess={handleAuthAction}
+      />
+
+      <ProfileModal
+        isOpen={isProfileOpen}
+        user={user}
+        onSaveProfile={handleSaveProfile}
+        onClose={() => setIsProfileOpen(false)}
       />
 
       <ConfirmModal
@@ -257,6 +331,9 @@ function App() {
           setView(targetView)
         }}
         onNewNote={createNote}
+        user={user}
+        onOpenProfile={() => setIsProfileOpen(true)}
+        onLogout={handleLogout}
       />
       <main className="main-content">
         {view === 'dashboard' ? (

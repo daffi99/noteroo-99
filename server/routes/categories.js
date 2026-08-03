@@ -1,15 +1,20 @@
 import { Router } from 'express'
 import { sql } from '../db.js'
+import { authenticate } from '../middleware/auth.js'
 
 const router = Router()
 
-// GET all categories
+// Require authentication for all category routes
+router.use(authenticate)
+
+// GET all categories for authenticated user strictly
 router.get('/', async (req, res) => {
   try {
     const categories = await sql`
       SELECT c.*, COUNT(n.id)::int as note_count
       FROM categories c
-      LEFT JOIN notes n ON n.category_id = c.id
+      LEFT JOIN notes n ON n.category_id = c.id AND n.deleted_at IS NULL
+      WHERE c.user_id = ${req.user.id}
       GROUP BY c.id
       ORDER BY c.name ASC
     `
@@ -19,7 +24,7 @@ router.get('/', async (req, res) => {
   }
 })
 
-// POST create category
+// POST create category for authenticated user strictly
 router.post('/', async (req, res) => {
   try {
     const { name, color = '#7c3aed' } = req.body
@@ -27,21 +32,29 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Category name is required' })
     }
 
+    const cleanName = name.trim()
+
+    // Check if duplicate for user
+    const existing = await sql`
+      SELECT id FROM categories 
+      WHERE LOWER(name) = LOWER(${cleanName}) AND user_id = ${req.user.id}
+    `
+    if (existing.length > 0) {
+      return res.status(400).json({ error: 'Category name already exists' })
+    }
+
     const [category] = await sql`
-      INSERT INTO categories (name, color)
-      VALUES (${name.trim()}, ${color})
+      INSERT INTO categories (name, color, user_id)
+      VALUES (${cleanName}, ${color}, ${req.user.id})
       RETURNING *
     `
     res.status(201).json(category)
   } catch (err) {
-    if (err.message.includes('unique') || err.message.includes('duplicate')) {
-      return res.status(400).json({ error: 'Category name already exists' })
-    }
     res.status(500).json({ error: err.message })
   }
 })
 
-// PUT update category
+// PUT update category strictly for authenticated user
 router.put('/:id', async (req, res) => {
   try {
     const { name, color } = req.body
@@ -52,8 +65,9 @@ router.put('/:id', async (req, res) => {
     const [category] = await sql`
       UPDATE categories
       SET name = ${name.trim()},
-          color = ${color}
-      WHERE id = ${req.params.id}
+          color = ${color},
+          user_id = ${req.user.id}
+      WHERE id = ${req.params.id} AND user_id = ${req.user.id}
       RETURNING *
     `
     if (!category) return res.status(404).json({ error: 'Category not found' })
@@ -63,11 +77,11 @@ router.put('/:id', async (req, res) => {
   }
 })
 
-// DELETE category
+// DELETE category strictly for authenticated user
 router.delete('/:id', async (req, res) => {
   try {
     const [category] = await sql`
-      DELETE FROM categories WHERE id = ${req.params.id} RETURNING *
+      DELETE FROM categories WHERE id = ${req.params.id} AND user_id = ${req.user.id} RETURNING *
     `
     if (!category) return res.status(404).json({ error: 'Category not found' })
     res.json({ message: 'Category deleted' })
