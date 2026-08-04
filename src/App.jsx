@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar'
 import SearchBar from './components/SearchBar'
 import NoteGrid from './components/NoteGrid'
 import NoteEditor from './components/NoteEditor'
+import NoteEditorSkeleton from './components/NoteEditorSkeleton'
 import CategoryManager from './components/CategoryManager'
 import TrashView from './components/TrashView'
 import Toast from './components/Toast'
@@ -23,6 +24,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [view, setView] = useState('dashboard') // 'dashboard' | 'editor' | 'categories' | 'trash'
+  const [isCreatingNote, setIsCreatingNote] = useState(false)
   const [toast, setToast] = useState({ message: '', type: 'warning' })
 
   // Check auth session on mount
@@ -130,6 +132,9 @@ function App() {
 
   const createNote = async () => {
     const randomColor = NOTE_COLORS[Math.floor(Math.random() * NOTE_COLORS.length)]
+    setIsCreatingNote(true)
+    setActiveNote(null)
+    setView('editor')
     try {
       const note = await api.createNote({
         title: 'Untitled',
@@ -139,9 +144,12 @@ function App() {
       })
       setNotes((prev) => sortNotes([note, ...prev]))
       setActiveNote(note)
-      setView('editor')
     } catch (err) {
       console.error('Error creating note:', err)
+      setToast({ message: 'Failed to create note. Please try again.', type: 'danger' })
+      setView('dashboard')
+    } finally {
+      setIsCreatingNote(false)
     }
   }
 
@@ -377,6 +385,8 @@ function App() {
               fetchCategories()
             }}
           />
+        ) : isCreatingNote || !activeNote ? (
+          <NoteEditorSkeleton onBack={handleBack} />
         ) : (
           <NoteEditor
             key={activeNote?.id}
