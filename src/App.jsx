@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { api } from './lib/api'
 import Sidebar from './components/Sidebar'
 import SearchBar from './components/SearchBar'
@@ -26,6 +26,30 @@ function App() {
   const [view, setView] = useState('dashboard') // 'dashboard' | 'editor' | 'categories' | 'trash'
   const [isCreatingNote, setIsCreatingNote] = useState(false)
   const [toast, setToast] = useState({ message: '', type: 'warning' })
+  const [showScrollTop, setShowScrollTop] = useState(false)
+  const mainContentRef = useRef(null)
+
+  useEffect(() => {
+    const el = mainContentRef.current
+    if (!el) return
+
+    const handleScroll = () => {
+      setShowScrollTop(el.scrollTop > 150)
+    }
+
+    // Reset scroll position and check scroll state when view changes
+    el.scrollTop = 0
+    setShowScrollTop(false)
+
+    el.addEventListener('scroll', handleScroll)
+    return () => el.removeEventListener('scroll', handleScroll)
+  }, [view, activeNote?.id])
+
+  const scrollToTop = () => {
+    if (mainContentRef.current) {
+      mainContentRef.current.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
 
   // Check auth session on mount
   useEffect(() => {
@@ -343,7 +367,7 @@ function App() {
         onOpenProfile={() => setIsProfileOpen(true)}
         onLogout={handleLogout}
       />
-      <main className="main-content">
+      <main className="main-content" ref={mainContentRef}>
         {view === 'dashboard' ? (
           <>
             <div className="dashboard-header">
@@ -400,6 +424,21 @@ function App() {
           />
         )}
       </main>
+
+      {showScrollTop && (
+        <button
+          type="button"
+          className="scroll-to-top-btn"
+          onClick={scrollToTop}
+          title="Go to top"
+          aria-label="Go to top"
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="19" x2="12" y2="5" />
+            <polyline points="5 12 12 5 19 12" />
+          </svg>
+        </button>
+      )}
     </div>
   )
 }
