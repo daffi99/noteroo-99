@@ -1278,17 +1278,21 @@ select, .editor-category-select {
 
 /* ========== RESPONSIVE ========== */
 @media (max-width: 768px) {
+  .app {
+    flex-direction: column-reverse;
+  }
+
   .main-content {
-    --main-padding-top: 1.25rem;
-    padding: var(--main-padding-top) 1.25rem;
+    --main-padding-top: 1rem;
+    padding: var(--main-padding-top) 1rem 75px 1rem;
   }
 
   .notes-header {
-    font-size: 1.8rem;
+    font-size: 1.75rem;
   }
 
   .note-grid {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 0.85rem;
   }
 
@@ -1296,19 +1300,59 @@ select, .editor-category-select {
     grid-template-columns: 1fr;
   }
 
+  .editor-toolbar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 0.4rem 0.5rem;
+    gap: 4px;
+    border-radius: var(--radius-lg);
+  }
+
+  .editor-toolbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .editor-topbar {
+    padding: 0.5rem 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .editor-topbar__right {
+    gap: 0.4rem;
+  }
+
   .editor-title-input {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
   }
 
   .ProseMirror {
-    padding: 1.25rem;
-    min-height: 350px;
+    padding: 1rem;
+    min-height: 320px;
+  }
+
+  .scroll-to-top-btn {
+    bottom: 5.25rem;
+    right: 1.25rem;
+    width: 44px;
+    height: 44px;
   }
 }
 
 @media (max-width: 480px) {
   .note-grid {
     grid-template-columns: 1fr;
+  }
+
+  .editor-back-btn {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.82rem;
+  }
+
+  .editor-export-btn span,
+  .editor-pin-btn span {
+    display: none;
   }
 }
 

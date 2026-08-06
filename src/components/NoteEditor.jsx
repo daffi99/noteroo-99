@@ -8,6 +8,7 @@ import { TextSelection } from '@tiptap/pm/state'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { exportNoteToTxt } from '../utils/export'
 import CategoryDropdown from './CategoryDropdown'
+import { MathCalculationExtension } from '../lib/tiptap-math-extension'
 
 const HIGHLIGHT_COLORS = [
   { name: 'Yellow', color: '#fef08a' },
@@ -144,6 +145,7 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
       CustomHighlight.configure({
         multicolor: true,
       }),
+      MathCalculationExtension,
     ],
     content: note?.content || '',
     onUpdate: ({ editor }) => {
@@ -490,6 +492,27 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
           title="Horizontal Rule"
         >
           —
+        </ToolbarButton>
+
+        <div className="toolbar-divider" />
+
+        <ToolbarButton
+          onClick={() => editor.chain().focus().evaluateCurrentLine().run()}
+          title="Calculate Math Line (e.g. type '= 15 * 80 =' or press here)"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="4" y="2" width="16" height="20" rx="2" />
+            <line x1="8" y1="6" x2="16" y2="6" />
+            <line x1="16" y1="14" x2="16" y2="14" />
+            <line x1="12" y1="14" x2="12" y2="14" />
+            <line x1="8" y1="14" x2="8" y2="14" />
+            <line x1="16" y1="18" x2="16" y2="18" />
+            <line x1="12" y1="18" x2="12" y2="18" />
+            <line x1="8" y1="18" x2="8" y2="18" />
+            <line x1="16" y1="10" x2="16" y2="10" />
+            <line x1="12" y1="10" x2="12" y2="10" />
+            <line x1="8" y1="10" x2="8" y2="10" />
+          </svg>
         </ToolbarButton>
       </div>
 
