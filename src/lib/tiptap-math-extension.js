@@ -2,7 +2,7 @@ import { Extension } from '@tiptap/core'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 
 /**
- * Parses numbers from text strings (supports 200.000, 300.000, 2.00000, 25k, Rp 150.000, 200,000)
+ * Parses numbers from text strings (supports 200.000, 300.000, 200000, 25k, Rp 150.000, 200,000)
  */
 export function parseNumberFromText(text) {
   if (!text) return null
@@ -265,31 +265,7 @@ export const MathCalculationExtension = Extension.create({
           const { doc } = newState
           let tr = null
 
-          // 1. Auto-format raw 4+ unformatted digits into dot thousand notation (e.g. 2000000 -> 2.000.000)
-          doc.descendants((node, pos) => {
-            if (node.isText) {
-              const text = node.text
-              const rawDigitMatch = text.match(/(^|[\s\+\-\:\/\$\(Rp\.?])(\d{4,12})(?=$|[\s\+\-\:\/\=\)\,\.])/i)
-              if (rawDigitMatch) {
-                const prefix = rawDigitMatch[1]
-                const rawDigits = rawDigitMatch[2]
-                const formatted = rawDigits.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
-
-                if (rawDigits !== formatted) {
-                  if (!tr) tr = newState.tr
-                  const startPos = pos + rawDigitMatch.index + prefix.length
-                  const endPos = startPos + rawDigits.length
-                  tr = tr.replaceWith(
-                    startPos,
-                    endPos,
-                    newState.schema.text(formatted)
-                  )
-                }
-              }
-            }
-          })
-
-          // 2. Auto-recalculate any "Total = ..." line when list numbers are updated
+          // Auto-recalculate any "Total = ..." line when list numbers are updated
           doc.descendants((node, pos) => {
             if (node.isText) {
               const text = node.text
