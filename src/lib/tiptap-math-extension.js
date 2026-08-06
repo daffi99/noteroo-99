@@ -10,7 +10,7 @@ export function parseNumberFromText(text) {
   // Ignore lines that are already total calculations (e.g. "Total = 500.000")
   if (/total\s*=/i.test(text)) return null
 
-  // Extract number pattern from line (e.g. 200.000, 2.00000, 300.000, 25k, Rp 150.000)
+  // Extract number pattern from line (e.g. 200.000, 300.000, 25k, Rp 150.000)
   const match = text.match(/(?:^|\s|-|\+|\:|\/|\$|Rp\.?)\s*([\d\.]+)\s*(k|rb|ribu|m|jt)?(?:\s|$)/i)
   if (!match) return null
 
@@ -265,23 +265,20 @@ export const MathCalculationExtension = Extension.create({
           const { doc } = newState
           let tr = null
 
-          // 1. Auto-format 4+ raw digit sequences or malformed dot numbers (e.g. 2000000 -> 2.000.000, 2.00000 -> 2.000.000)
+          // 1. Auto-format raw 4+ unformatted digits into dot thousand notation (e.g. 2000000 -> 2.000.000)
           doc.descendants((node, pos) => {
             if (node.isText) {
               const text = node.text
-              const numberMatch = text.match(
-                /(^|\s|\+|\-|\:|\$|Rp\.?|x|×|\*)([0-9]{1,3}(?:\.[0-9]{1,2}|\.[0-9]{4,})+|[0-9]{4,12})(?=\s|$|\+|\-|\=|\))/i
-              )
-              if (numberMatch) {
-                const prefix = numberMatch[1]
-                const rawNumStr = numberMatch[2]
-                const cleanDigits = rawNumStr.replace(/\./g, '')
-                const formatted = cleanDigits.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+              const rawDigitMatch = text.match(/(^|[\s\+\-\:\/\$\(Rp\.?])(\d{4,12})(?=$|[\s\+\-\:\/\=\)\,\.])/i)
+              if (rawDigitMatch) {
+                const prefix = rawDigitMatch[1]
+                const rawDigits = rawDigitMatch[2]
+                const formatted = rawDigits.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 
-                if (rawNumStr !== formatted) {
+                if (rawDigits !== formatted) {
                   if (!tr) tr = newState.tr
-                  const startPos = pos + numberMatch.index + prefix.length
-                  const endPos = startPos + rawNumStr.length
+                  const startPos = pos + rawDigitMatch.index + prefix.length
+                  const endPos = startPos + rawDigits.length
                   tr = tr.replaceWith(
                     startPos,
                     endPos,
@@ -296,7 +293,7 @@ export const MathCalculationExtension = Extension.create({
           doc.descendants((node, pos) => {
             if (node.isText) {
               const text = node.text
-              const totalMatch = text.match(/(.*Total\s*=\s*)([\d\.\,kKrbRBmJT]+)/i)
+              const totalMatch = text.match(/(.*Total\s*=\s*)([\d\.]+)/i)
               if (totalMatch) {
                 const prefixWithSpace = totalMatch[1]
                 const currentValStr = totalMatch[2]
