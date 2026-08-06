@@ -4,7 +4,7 @@ import './Sidebar.css';
 const Sidebar = ({ activeView, onNavigate, onNewNote, user, onOpenProfile, onLogout }) => {
   const userInitial = (user?.name || user?.email || 'U').charAt(0).toUpperCase();
 
-  const rawVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.12.0';
+  const rawVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.13.0';
   const versionParts = rawVersion.split('.');
   const displayVersion = `V${versionParts[0]}.${versionParts[1]}`;
 
