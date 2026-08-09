@@ -2,7 +2,7 @@ import { Extension } from '@tiptap/core'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 
 /**
- * Parses numbers from text strings (supports 200.000, 300.000, 200000, 25k, Rp 150.000, 200,000)
+ * Parses numbers from text strings (supports 200.000, 65.000+53.000+155.000, Brakiasi (150) + 304.000, SSD + 40.000+75.000 = 115.000)
  */
 export function parseNumberFromText(text) {
   if (!text) return null
@@ -10,8 +10,36 @@ export function parseNumberFromText(text) {
   // Ignore lines that are already total calculations (e.g. "Total = 500.000")
   if (/total\s*=/i.test(text)) return null
 
-  // Extract number pattern from line (e.g. 200.000, 300.000, 25k, Rp 150.000)
-  const match = text.match(/(?:^|\s|-|\+|\:|\/|\$|Rp\.?)\s*([\d\.]+)\s*(k|rb|ribu|m|jt)?(?:\s|$)/i)
+  let cleanedText = text.trim()
+
+  // 1. If line has an evaluated result after "=" (e.g. "SSD + 40.000+75.000 = 115.000")
+  const afterEqualMatch = cleanedText.match(/=\s*([\d\.\,\s]+)$/)
+  if (afterEqualMatch) {
+    const rawValStr = afterEqualMatch[1].trim()
+    const usesDots = rawValStr.includes('.')
+    const numDigits = rawValStr.replace(/\./g, '').replace(/,/g, '')
+    const num = parseFloat(numDigits)
+    if (!isNaN(num)) {
+      return { value: num, usesDots }
+    }
+  }
+
+  // Remove content inside parentheses (e.g. "Brakiasi (150) + 304.000" -> "Brakiasi + 304.000")
+  // so numbers like (150) don't override the actual price 304.000
+  const textWithoutParens = cleanedText.replace(/\([^)]*\)/g, '').trim()
+
+  // 2. Check for inline math addition/subtraction/multiplication (e.g. "65.000+53.000+155.000")
+  const inlineMathMatch = textWithoutParens.match(/(?:^|[\/\:\,\s\a-zA-Z\+])\s*([\d\.]+(?:\s*[\+\-\*\/]\s*[\d\.]+)+)/)
+  if (inlineMathMatch) {
+    const expr = inlineMathMatch[1].trim()
+    const evalRes = evaluateMathExpression(expr)
+    if (evalRes !== null) {
+      return { value: evalRes.value, usesDots: evalRes.usesDots }
+    }
+  }
+
+  // 3. Extract primary single number from line (e.g. "+ 304.000", "200.000", "Rp 150.000", "25k")
+  const match = textWithoutParens.match(/(?:^|\s|-|\+|\:|\/|\$|Rp\.?)\s*([\d\.]+)\s*(k|rb|ribu|m|jt)?(?:\s|$)/i)
   if (!match) return null
 
   let rawStr = match[1]
