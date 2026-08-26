@@ -324,19 +324,33 @@ export const MathCalculationExtension = Extension.create({
         },
         props: {
           handleTextInput(view, from, to, text) {
-            if (text !== '=') return false
-
             const { state } = view
             const $from = state.doc.resolve(from)
             const textBefore = $from.parent.textContent.slice(0, $from.parentOffset)
 
-            // 1. Try single-line math calculation (e.g. "Peralatan mati lampu / 65.000+53.000+155.000")
-            const mathMatch = textBefore.match(/(?:^|[\/\:\,\s\a-zA-Z])\s*([\d\.\+\-\*\/\%\(\)\s x×÷]+)$/)
-            if (mathMatch) {
-              const expr = mathMatch[1].trim()
-              const res = evaluateMathExpression(expr)
-              if (res !== null) {
-                const formattedResult = formatNumber(res.value, res.usesDots)
+            // 1. If user typed '=' -> Evaluate single-line math or scoped list sum
+            if (text === '=') {
+              // Try single-line math calculation (e.g. "Peralatan mati lampu / 65.000+53.000+155.000")
+              const mathMatch = textBefore.match(/(?:^|[\/\:\,\s\a-zA-Z])\s*([\d\.\+\-\*\/\%\(\)\s x×÷]+)$/)
+              if (mathMatch) {
+                const expr = mathMatch[1].trim()
+                const res = evaluateMathExpression(expr)
+                if (res !== null) {
+                  const formattedResult = formatNumber(res.value, res.usesDots)
+                  const tr = state.tr.replaceWith(
+                    from,
+                    to,
+                    state.schema.text(` = ${formattedResult} `)
+                  )
+                  view.dispatch(tr)
+                  return true
+                }
+              }
+
+              // Scoped calculation from target checklist / list
+              const sumData = getScopedListSum(state.doc, from)
+              if (sumData) {
+                const formattedResult = formatNumber(sumData.total, sumData.preferDots)
                 const tr = state.tr.replaceWith(
                   from,
                   to,
@@ -345,19 +359,34 @@ export const MathCalculationExtension = Extension.create({
                 view.dispatch(tr)
                 return true
               }
+
+              return false
             }
 
-            // 2. Scoped calculation from target checklist / list
-            const sumData = getScopedListSum(state.doc, from)
-            if (sumData) {
-              const formattedResult = formatNumber(sumData.total, sumData.preferDots)
-              const tr = state.tr.replaceWith(
-                from,
-                to,
-                state.schema.text(` = ${formattedResult} `)
-              )
-              view.dispatch(tr)
-              return true
+            // 2. Auto-format numbers with dots as user types digits (e.g. typing 000 after 200 -> 200.000, 2000000 -> 2.000.000)
+            if (/^\d$/.test(text)) {
+              const numTokenMatch = textBefore.match(/(?:^|[\s\+\-\:\/\$\(\=\*\;\,]|Rp\.?)([\d\.]+)$/i)
+              if (numTokenMatch) {
+                const prevToken = numTokenMatch[1]
+                const projectedToken = prevToken + text
+                const cleanDigits = projectedToken.replace(/\./g, '')
+
+                // Format when we have 4 or more digits
+                if (cleanDigits.length >= 4 && /^\d+$/.test(cleanDigits)) {
+                  const formatted = cleanDigits.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+                  if (formatted !== projectedToken) {
+                    const tokenStart = from - prevToken.length
+                    const tokenEnd = to
+                    const tr = state.tr.replaceWith(
+                      tokenStart,
+                      tokenEnd,
+                      state.schema.text(formatted)
+                    )
+                    view.dispatch(tr)
+                    return true
+                  }
+                }
+              }
             }
 
             return false
