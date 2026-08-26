@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import NoteCard from './NoteCard'
 
 export default function NoteGrid({
@@ -40,34 +40,7 @@ export default function NoteGrid({
   })
 
   const totalPinnedInApp = safeNotes.filter((n) => n?.is_pinned).length
-  const tabTouchRef = useRef({ x: 0, y: 0, moved: false, time: 0 })
-
-  const handleTabTouchStart = (e) => {
-    if (e.touches && e.touches[0]) {
-      tabTouchRef.current = {
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY,
-        moved: false,
-        time: Date.now(),
-      }
-    }
-  }
-
-  const handleTabTouchMove = (e) => {
-    if (e.touches && e.touches[0]) {
-      const dx = Math.abs(e.touches[0].clientX - tabTouchRef.current.x)
-      const dy = Math.abs(e.touches[0].clientY - tabTouchRef.current.y)
-      if (dx > 8 || dy > 8) {
-        tabTouchRef.current.moved = true
-      }
-    }
-  }
-
-  const handleTabTouchEnd = (catId) => {
-    if (!tabTouchRef.current.moved && Date.now() - tabTouchRef.current.time < 500) {
-      setSelectedCategory(catId)
-    }
-  }
+  const canPinMore = totalPinnedInApp < 3
 
   return (
     <div className="note-grid-container">
@@ -78,9 +51,6 @@ export default function NoteGrid({
             type="button"
             className={`category-tab ${selectedCategory === 'all' ? 'category-tab--active' : ''}`}
             onClick={() => setSelectedCategory('all')}
-            onTouchStart={handleTabTouchStart}
-            onTouchMove={handleTabTouchMove}
-            onTouchEnd={() => handleTabTouchEnd('all')}
           >
             All ({safeNotes.length})
           </button>
@@ -92,9 +62,6 @@ export default function NoteGrid({
                 type="button"
                 className={`category-tab ${selectedCategory === cat.id ? 'category-tab--active' : ''}`}
                 onClick={() => setSelectedCategory(cat.id)}
-                onTouchStart={handleTabTouchStart}
-                onTouchMove={handleTabTouchMove}
-                onTouchEnd={() => handleTabTouchEnd(cat.id)}
               >
                 <span className="category-tab__dot" style={{ backgroundColor: cat.color || '#7c3aed' }} />
                 {cat.name} ({count})
@@ -106,9 +73,6 @@ export default function NoteGrid({
               type="button"
               className={`category-tab ${selectedCategory === 'uncategorized' ? 'category-tab--active' : ''}`}
               onClick={() => setSelectedCategory('uncategorized')}
-              onTouchStart={handleTabTouchStart}
-              onTouchMove={handleTabTouchMove}
-              onTouchEnd={() => handleTabTouchEnd('uncategorized')}
             >
               Uncategorized ({safeNotes.filter((n) => !n?.category_id).length})
             </button>

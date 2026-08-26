@@ -18,7 +18,6 @@ export default function NoteCard({
   canPinMore = true,
   style,
 }) {
-  const [isHovered, setIsHovered] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [showColorPalette, setShowColorPalette] = useState(false)
   const menuRef = useRef(null)
@@ -76,7 +75,7 @@ export default function NoteCard({
     e.stopPropagation()
     setIsMenuOpen(false)
     setShowColorPalette(false)
-    onClick(note)
+    if (onClick) onClick(note)
   }
 
   const handleDeleteMenuClick = (e) => {
@@ -97,37 +96,7 @@ export default function NoteCard({
     }
   }
 
-  const touchStartRef = useRef({ x: 0, y: 0, moved: false, time: 0 })
-
-  const handleTouchStart = (e) => {
-    if (e.touches && e.touches[0]) {
-      touchStartRef.current = {
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY,
-        moved: false,
-        time: Date.now(),
-      }
-    }
-  }
-
-  const handleTouchMove = (e) => {
-    if (e.touches && e.touches[0]) {
-      const dx = Math.abs(e.touches[0].clientX - touchStartRef.current.x)
-      const dy = Math.abs(e.touches[0].clientY - touchStartRef.current.y)
-      if (dx > 10 || dy > 10) {
-        touchStartRef.current.moved = true
-      }
-    }
-  }
-
   if (!note) return null
-
-  const handleTouchEnd = (e) => {
-    if (!touchStartRef.current.moved && Date.now() - touchStartRef.current.time < 500) {
-      if (menuRef.current && menuRef.current.contains(e.target)) return
-      if (onClick) onClick(note)
-    }
-  }
 
   const showPinOption = note.is_pinned || canPinMore
 
@@ -135,9 +104,6 @@ export default function NoteCard({
     <div
       className={`note-card note-card--${note.color || 'orange'} ${note.is_pinned ? 'note-card--pinned' : ''}`}
       onClick={() => onClick && onClick(note)}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
       role="button"
       tabIndex={0}
       style={style}
