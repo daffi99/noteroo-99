@@ -102,7 +102,7 @@ export default function NoteCard({
 
   return (
     <div
-      className={`note-card note-card--${note.color || 'orange'} ${note.is_pinned ? 'note-card--pinned' : ''}`}
+      className={`note-card note-card--${note.color || 'orange'} ${note.is_pinned ? 'note-card--pinned' : ''} ${isMenuOpen ? 'note-card--menu-open' : ''}`}
       onClick={() => onClick && onClick(note)}
       role="button"
       tabIndex={0}

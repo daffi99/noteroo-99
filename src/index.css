@@ -102,7 +102,7 @@ textarea,
   background: rgba(0, 0, 0, 0.15);
   border-radius: var(--radius-full);
 }
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   ::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 0, 0, 0.25);
   }
@@ -164,7 +164,7 @@ textarea,
   transition: border-color 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .manage-categories-btn:hover {
     border-color: var(--accent);
     color: var(--accent);
@@ -217,7 +217,7 @@ textarea,
   transition: transform 0.1s ease, background 0.15s ease, color 0.15s ease;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .category-tab:hover {
     background: #f0f0f3;
     color: var(--text-main);
@@ -237,7 +237,7 @@ textarea,
   box-shadow: var(--shadow-xs);
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .category-tab--active:hover {
     background: #000000;
     color: #ffffff;
@@ -288,7 +288,7 @@ textarea,
   outline: none;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .note-card:hover {
     transform: translateY(-4px);
     box-shadow: var(--shadow-md);
@@ -402,7 +402,7 @@ textarea,
   transform: scale(1);
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .note-card:hover .note-card__edit-btn {
     opacity: 1;
     transform: scale(1);
@@ -434,7 +434,7 @@ textarea,
   transition: border-color 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .editor-export-btn:hover {
     border-color: #10b981;
     color: #059669;
@@ -587,7 +587,7 @@ textarea,
   transition: transform 0.15s ease;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .color-preset-btn:hover {
     transform: scale(1.15);
   }
@@ -612,7 +612,7 @@ textarea,
   transition: background 0.15s ease, transform 0.15s ease;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .category-submit-btn:hover:not(:disabled) {
     background: var(--accent-hover);
     transform: translateY(-1px);
@@ -655,7 +655,7 @@ textarea,
   transition: border-color 0.15s ease;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .category-item-card:hover {
     border-color: #d1d1d6;
   }
@@ -715,7 +715,7 @@ textarea,
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .btn-icon:hover {
     background: #f0f0f3;
     color: var(--text-main);
@@ -875,7 +875,7 @@ textarea,
   box-sizing: border-box;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .editor-actions-menu__item:hover {
     background: var(--bg-main, #f5f5f7);
   }
@@ -893,7 +893,7 @@ textarea,
   color: #ef4444;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .editor-actions-menu__item--delete:hover {
     background: rgba(239, 68, 68, 0.08);
   }
@@ -926,7 +926,7 @@ textarea,
   transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .editor-back-btn:hover {
     background: var(--bg-card);
     color: var(--text-main);
@@ -953,7 +953,7 @@ textarea,
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .editor-delete-btn:hover {
     background: #fee2e2;
     color: #ef4444;
@@ -1011,7 +1011,7 @@ textarea,
   transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .custom-dropdown__trigger:hover {
     background: rgba(124, 58, 237, 0.03);
     border-color: rgba(124, 58, 237, 0.3);
@@ -1123,7 +1123,7 @@ textarea,
   text-align: left;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .custom-dropdown__item:hover {
     background: rgba(124, 58, 237, 0.08);
     color: var(--accent);
@@ -1197,7 +1197,7 @@ select, .editor-category-select {
   outline: none;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .color-picker__swatch:hover {
     transform: scale(1.15);
   }
@@ -1280,7 +1280,7 @@ select, .editor-category-select {
   transition: background 0.12s ease, color 0.12s ease;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .toolbar-btn:hover {
     background: var(--bg-main);
     color: var(--text-main);
@@ -1490,7 +1490,7 @@ select, .editor-category-select {
   animation: scrollToTopPopIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .scroll-to-top-btn:hover {
     background: #ffffff;
     color: #000000;
@@ -1792,7 +1792,7 @@ select, .editor-category-select {
   color: var(--text-main);
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .confirm-modal__btn--cancel:hover:not(:disabled) {
     background: var(--border-color);
     transform: translateY(-1px);
@@ -1809,7 +1809,7 @@ select, .editor-category-select {
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .confirm-modal__btn--danger:hover:not(:disabled) {
     background: #dc2626;
     box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
@@ -1827,7 +1827,7 @@ select, .editor-category-select {
   box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .confirm-modal__btn--confirm:hover:not(:disabled) {
     background: var(--accent-hover);
     box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
@@ -1924,7 +1924,7 @@ select, .editor-category-select {
   outline: none;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .empty-trash-btn:hover {
     background: #ef4444;
     color: #ffffff;
@@ -1999,7 +1999,7 @@ select, .editor-category-select {
   border-color: rgba(124, 58, 237, 0.2);
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .trash-action-btn--restore:hover {
     background: var(--accent);
     color: #ffffff;
@@ -2013,7 +2013,7 @@ select, .editor-category-select {
   border-color: rgba(239, 68, 68, 0.2);
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .trash-action-btn--delete:hover {
     background: #ef4444;
     color: #ffffff;
@@ -2058,6 +2058,10 @@ select, .editor-category-select {
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
+.note-card--menu-open {
+  z-index: 50 !important;
+}
+
 .note-card__menu-wrapper {
   position: relative;
   margin-left: auto;
@@ -2079,7 +2083,7 @@ select, .editor-category-select {
   transition: opacity 0.15s ease, background 0.15s ease;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .note-card__menu-btn {
     opacity: 0;
   }
@@ -2093,9 +2097,9 @@ select, .editor-category-select {
   }
 }
 
-@media (hover: none) {
+@media (max-width: 768px) {
   .note-card__menu-btn {
-    opacity: 0.65;
+    opacity: 0.75;
   }
   .note-card__menu-btn--visible {
     opacity: 1;
@@ -2113,9 +2117,9 @@ select, .editor-category-select {
   right: 0;
   background: #ffffff;
   border-radius: var(--radius-md);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(0, 0, 0, 0.08);
-  min-width: 140px;
+  min-width: 145px;
   padding: 6px;
   z-index: 100;
   animation: dropdownFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
@@ -2150,7 +2154,7 @@ select, .editor-category-select {
   transition: background 0.12s ease;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .note-card__dropdown-item:hover {
     background: rgba(0, 0, 0, 0.05);
   }
@@ -2231,7 +2235,7 @@ select, .editor-category-select {
   outline: none;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .editor-pin-btn:hover {
     background: rgba(0, 0, 0, 0.1);
   }
@@ -2382,7 +2386,7 @@ ul[data-type="taskList"] li[data-checked="true"] > div,
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .highlight-menu__swatch:hover {
     transform: scale(1.15);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
@@ -2407,7 +2411,7 @@ ul[data-type="taskList"] li[data-checked="true"] > div,
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .highlight-menu__clear-btn:hover {
     background: rgba(239, 68, 68, 0.1);
     color: #ef4444;
@@ -2490,7 +2494,7 @@ mark {
   transition: color 0.15s ease;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .toast-notification__close:hover {
     color: var(--text-main);
   }
@@ -2579,7 +2583,7 @@ mark {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .note-card__color-swatch:hover {
     transform: scale(1.2);
   }
@@ -2774,7 +2778,7 @@ mark {
   margin-top: 0.35rem;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .auth-modal__submit-btn:hover:not(:disabled) {
     opacity: 0.92;
     transform: translateY(-1px);
@@ -2825,7 +2829,7 @@ mark {
   transition: transform 0.2s ease;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .sidebar__user-btn:hover {
     transform: scale(1.08);
   }
@@ -2861,7 +2865,7 @@ mark {
   color: #9ca3af !important;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .sidebar__logout-btn:hover {
     background-color: #fef2f2 !important;
     color: #ef4444 !important;
@@ -2927,7 +2931,7 @@ mark {
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .profile-modal__close-btn:hover {
     background: var(--bg-main);
     color: var(--text-main);
@@ -3023,7 +3027,7 @@ mark {
   color: #ffffff;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .profile-modal__btn--upload:hover {
     opacity: 0.92;
   }
@@ -3034,7 +3038,7 @@ mark {
   color: #ef4444;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .profile-modal__btn--remove:hover {
     background: rgba(239, 68, 68, 0.18);
   }
@@ -3091,7 +3095,7 @@ mark {
   border: 1px solid var(--border-color);
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .profile-modal__btn--cancel:hover {
     background: rgba(0, 0, 0, 0.05);
   }
@@ -3103,7 +3107,7 @@ mark {
   padding: 0.65rem 1.25rem;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .profile-modal__btn--save:hover:not(:disabled) {
     opacity: 0.92;
     transform: translateY(-1px);

@@ -43,7 +43,7 @@
   opacity: 0.7;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .search-input:hover {
     border-color: var(--accent-border, rgba(170, 59, 255, 0.5));
   }
@@ -74,7 +74,7 @@
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 769px) {
   .search-clear-btn:hover {
     background-color: var(--accent-bg, rgba(170, 59, 255, 0.1));
     color: var(--text-h, #08060d);
@@ -215,12 +215,6 @@
   box-sizing: border-box;
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .mobile-options-menu__item:hover {
-    background: var(--bg-main, #f5f5f7);
-  }
-}
-
 .mobile-options-menu__item:active {
   background: var(--bg-main, #f5f5f7);
 }
@@ -231,12 +225,6 @@
 
 .mobile-options-menu__item--logout {
   color: #ef4444;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .mobile-options-menu__item--logout:hover {
-    background: rgba(239, 68, 68, 0.08);
-  }
 }
 
 .mobile-options-menu__item--logout:active {
