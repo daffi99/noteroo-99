@@ -127,6 +127,8 @@ export default function NoteCard({
     }
   }
 
+  const showPinOption = note.is_pinned || canPinMore
+
   return (
     <div
       className={`note-card note-card--${note.color || 'orange'} ${note.is_pinned ? 'note-card--pinned' : ''}`}
