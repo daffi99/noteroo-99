@@ -73,6 +73,19 @@ body {
   height: 100%;
 }
 
+/* Touch & Click Responsiveness (PWA/Mobile Fast Response) */
+button,
+[role="button"],
+a,
+input,
+select,
+textarea,
+.category-tab,
+.note-card {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 #root {
   height: 100%;
 }
@@ -89,8 +102,10 @@ body {
   background: rgba(0, 0, 0, 0.15);
   border-radius: var(--radius-full);
 }
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.25);
+@media (hover: hover) and (pointer: fine) {
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.25);
+  }
 }
 
 /* ========== APP LAYOUT ========== */
@@ -146,14 +161,20 @@ body {
   font-family: var(--font-family);
   cursor: pointer;
   box-shadow: var(--shadow-xs);
-  transition: all var(--transition-fast);
+  transition: border-color 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.manage-categories-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
+@media (hover: hover) and (pointer: fine) {
+  .manage-categories-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+.manage-categories-btn:active {
+  transform: scale(0.96);
 }
 
 .category-bar-row {
@@ -376,14 +397,24 @@ body {
   transition: opacity var(--transition), transform var(--transition), background var(--transition);
 }
 
-.note-card__edit-btn--visible,
-.note-card:hover .note-card__edit-btn {
+.note-card__edit-btn--visible {
   opacity: 1;
   transform: scale(1);
 }
 
-.note-card__edit-btn:hover {
-  background: rgba(0, 0, 0, 0.2);
+@media (hover: hover) and (pointer: fine) {
+  .note-card:hover .note-card__edit-btn {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .note-card__edit-btn:hover {
+    background: rgba(0, 0, 0, 0.2);
+  }
+}
+
+.note-card__edit-btn:active {
+  background: rgba(0, 0, 0, 0.25);
+  transform: scale(0.92);
 }
 
 .editor-export-btn {
@@ -400,14 +431,20 @@ body {
   font-family: var(--font-family);
   cursor: pointer;
   box-shadow: var(--shadow-xs);
-  transition: all var(--transition-fast);
+  transition: border-color 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.editor-export-btn:hover {
-  border-color: #10b981;
-  color: #059669;
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
+@media (hover: hover) and (pointer: fine) {
+  .editor-export-btn:hover {
+    border-color: #10b981;
+    color: #059669;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+.editor-export-btn:active {
+  transform: scale(0.96);
 }
 
 /* ========== EMPTY STATE ========== */
@@ -547,11 +584,13 @@ body {
   border-radius: 50%;
   border: 2px solid transparent;
   cursor: pointer;
-  transition: transform var(--transition-fast);
+  transition: transform 0.15s ease;
 }
 
-.color-preset-btn:hover {
-  transform: scale(1.15);
+@media (hover: hover) and (pointer: fine) {
+  .color-preset-btn:hover {
+    transform: scale(1.15);
+  }
 }
 
 .color-preset-btn--selected {
@@ -570,12 +609,18 @@ body {
   font-weight: 600;
   font-family: var(--font-family);
   cursor: pointer;
-  transition: background var(--transition-fast), transform var(--transition-fast);
+  transition: background 0.15s ease, transform 0.15s ease;
 }
 
-.category-submit-btn:hover:not(:disabled) {
-  background: var(--accent-hover);
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .category-submit-btn:hover:not(:disabled) {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+  }
+}
+
+.category-submit-btn:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .category-submit-btn:disabled {
@@ -607,11 +652,13 @@ body {
   border-radius: var(--radius-md);
   padding: 0.9rem 1.1rem;
   box-shadow: var(--shadow-xs);
-  transition: border-color var(--transition-fast);
+  transition: border-color 0.15s ease;
 }
 
-.category-item-card:hover {
-  border-color: #d1d1d6;
+@media (hover: hover) and (pointer: fine) {
+  .category-item-card:hover {
+    border-color: #d1d1d6;
+  }
 }
 
 .category-item-view {
@@ -665,17 +712,23 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
-.btn-icon:hover {
-  background: #f0f0f3;
-  color: var(--text-main);
+@media (hover: hover) and (pointer: fine) {
+  .btn-icon:hover {
+    background: #f0f0f3;
+    color: var(--text-main);
+  }
+
+  .btn-icon--delete:hover {
+    background: #fee2e2;
+    color: #ef4444;
+  }
 }
 
-.btn-icon--delete:hover {
-  background: #fee2e2;
-  color: #ef4444;
+.btn-icon:active {
+  transform: scale(0.92);
 }
 
 .category-item-edit {
@@ -822,7 +875,12 @@ body {
   box-sizing: border-box;
 }
 
-.editor-actions-menu__item:hover,
+@media (hover: hover) and (pointer: fine) {
+  .editor-actions-menu__item:hover {
+    background: var(--bg-main, #f5f5f7);
+  }
+}
+
 .editor-actions-menu__item:active {
   background: var(--bg-main, #f5f5f7);
 }
@@ -835,7 +893,12 @@ body {
   color: #ef4444;
 }
 
-.editor-actions-menu__item--delete:hover,
+@media (hover: hover) and (pointer: fine) {
+  .editor-actions-menu__item--delete:hover {
+    background: rgba(239, 68, 68, 0.08);
+  }
+}
+
 .editor-actions-menu__item--delete:active {
   background: rgba(239, 68, 68, 0.08);
 }
@@ -860,14 +923,20 @@ body {
   padding: 0.45rem 0.95rem;
   border-radius: var(--radius-full);
   box-shadow: var(--shadow-xs);
-  transition: all var(--transition-fast);
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.editor-back-btn:hover {
-  background: var(--bg-card);
-  color: var(--text-main);
-  transform: translateX(-3px);
-  box-shadow: var(--shadow-sm);
+@media (hover: hover) and (pointer: fine) {
+  .editor-back-btn:hover {
+    background: var(--bg-card);
+    color: var(--text-main);
+    transform: translateX(-3px);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+.editor-back-btn:active {
+  transform: scale(0.96);
 }
 
 .editor-delete-btn {
@@ -881,12 +950,18 @@ body {
   background: none;
   color: var(--text-muted);
   cursor: pointer;
-  transition: all var(--transition);
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
-.editor-delete-btn:hover {
-  background: #fee2e2;
-  color: #ef4444;
+@media (hover: hover) and (pointer: fine) {
+  .editor-delete-btn:hover {
+    background: #fee2e2;
+    color: #ef4444;
+  }
+}
+
+.editor-delete-btn:active {
+  transform: scale(0.92);
 }
 
 /* Save Indicator */
@@ -933,14 +1008,24 @@ body {
   font-weight: 600;
   cursor: pointer;
   outline: none;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 
-.custom-dropdown__trigger:hover {
-  background: rgba(124, 58, 237, 0.03);
-  border-color: rgba(124, 58, 237, 0.3);
-  box-shadow: 0 3px 8px rgba(124, 58, 237, 0.08);
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .custom-dropdown__trigger:hover {
+    background: rgba(124, 58, 237, 0.03);
+    border-color: rgba(124, 58, 237, 0.3);
+    box-shadow: 0 3px 8px rgba(124, 58, 237, 0.08);
+    transform: translateY(-1px);
+  }
+
+  .custom-dropdown__trigger:hover .custom-dropdown__folder-icon {
+    stroke: var(--accent);
+  }
+}
+
+.custom-dropdown__trigger:active {
+  transform: scale(0.96);
 }
 
 .custom-dropdown__trigger:focus-visible {
@@ -964,10 +1049,6 @@ body {
 .custom-dropdown__folder-icon {
   stroke: var(--text-secondary);
   transition: stroke var(--transition-fast);
-}
-
-.custom-dropdown__trigger:hover .custom-dropdown__folder-icon {
-  stroke: var(--accent);
 }
 
 .custom-dropdown__color-dot {
@@ -1038,13 +1119,19 @@ body {
   font-size: 0.85rem;
   font-weight: 500;
   color: var(--text-main);
-  transition: all 0.15s ease;
+  transition: background-color 0.12s ease, color 0.12s ease;
   text-align: left;
 }
 
-.custom-dropdown__item:hover {
-  background: rgba(124, 58, 237, 0.08);
-  color: var(--accent);
+@media (hover: hover) and (pointer: fine) {
+  .custom-dropdown__item:hover {
+    background: rgba(124, 58, 237, 0.08);
+    color: var(--accent);
+  }
+}
+
+.custom-dropdown__item:active {
+  background: rgba(124, 58, 237, 0.12);
 }
 
 .custom-dropdown__item--selected {
@@ -1106,12 +1193,14 @@ select, .editor-category-select {
   border-radius: 50%;
   border: 2.5px solid transparent;
   cursor: pointer;
-  transition: transform var(--transition-fast), border-color var(--transition-fast);
+  transition: transform 0.15s ease, border-color 0.15s ease;
   outline: none;
 }
 
-.color-picker__swatch:hover {
-  transform: scale(1.15);
+@media (hover: hover) and (pointer: fine) {
+  .color-picker__swatch:hover {
+    transform: scale(1.15);
+  }
 }
 
 .color-picker__swatch--active {
@@ -1188,20 +1277,26 @@ select, .editor-category-select {
   font-size: 0.85rem;
   font-weight: 600;
   font-family: var(--font-family);
-  transition: all var(--transition-fast);
+  transition: background 0.12s ease, color 0.12s ease;
 }
 
-.toolbar-btn:hover {
-  background: var(--bg-main);
-  color: var(--text-main);
+@media (hover: hover) and (pointer: fine) {
+  .toolbar-btn:hover {
+    background: var(--bg-main);
+    color: var(--text-main);
+  }
+
+  .toolbar-btn--active:hover {
+    background: var(--text-main);
+    color: var(--bg-card);
+  }
+}
+
+.toolbar-btn:active {
+  transform: scale(0.92);
 }
 
 .toolbar-btn--active {
-  background: var(--text-main);
-  color: var(--bg-card);
-}
-
-.toolbar-btn--active:hover {
   background: var(--text-main);
   color: var(--bg-card);
 }
@@ -1395,11 +1490,13 @@ select, .editor-category-select {
   animation: scrollToTopPopIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.scroll-to-top-btn:hover {
-  background: #ffffff;
-  color: #000000;
-  transform: translateY(-4px) scale(1.08);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
+@media (hover: hover) and (pointer: fine) {
+  .scroll-to-top-btn:hover {
+    background: #ffffff;
+    color: #000000;
+    transform: translateY(-4px) scale(1.08);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
+  }
 }
 
 .scroll-to-top-btn:active {
@@ -1695,9 +1792,15 @@ select, .editor-category-select {
   color: var(--text-main);
 }
 
-.confirm-modal__btn--cancel:hover:not(:disabled) {
-  background: var(--border-color);
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .confirm-modal__btn--cancel:hover:not(:disabled) {
+    background: var(--border-color);
+    transform: translateY(-1px);
+  }
+}
+
+.confirm-modal__btn--cancel:active:not(:disabled) {
+  transform: scale(0.96);
 }
 
 .confirm-modal__btn--danger {
@@ -1706,10 +1809,16 @@ select, .editor-category-select {
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
 }
 
-.confirm-modal__btn--danger:hover:not(:disabled) {
-  background: #dc2626;
-  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .confirm-modal__btn--danger:hover:not(:disabled) {
+    background: #dc2626;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+    transform: translateY(-1px);
+  }
+}
+
+.confirm-modal__btn--danger:active:not(:disabled) {
+  transform: scale(0.96);
 }
 
 .confirm-modal__btn--confirm {
@@ -1718,10 +1827,16 @@ select, .editor-category-select {
   box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
 }
 
-.confirm-modal__btn--confirm:hover:not(:disabled) {
-  background: var(--accent-hover);
-  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .confirm-modal__btn--confirm:hover:not(:disabled) {
+    background: var(--accent-hover);
+    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+    transform: translateY(-1px);
+  }
+}
+
+.confirm-modal__btn--confirm:active:not(:disabled) {
+  transform: scale(0.96);
 }
 
 .confirm-modal__btn:disabled {
@@ -1805,15 +1920,21 @@ select, .editor-category-select {
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
   outline: none;
 }
 
-.empty-trash-btn:hover {
-  background: #ef4444;
-  color: #ffffff;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .empty-trash-btn:hover {
+    background: #ef4444;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    transform: translateY(-1px);
+  }
+}
+
+.empty-trash-btn:active {
+  transform: scale(0.96);
 }
 
 .trash-card {
@@ -1864,8 +1985,12 @@ select, .editor-category-select {
   font-weight: 600;
   cursor: pointer;
   border: 1px solid transparent;
-  transition: all 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
   outline: none;
+}
+
+.trash-action-btn:active {
+  transform: scale(0.94);
 }
 
 .trash-action-btn--restore {
@@ -1874,10 +1999,12 @@ select, .editor-category-select {
   border-color: rgba(124, 58, 237, 0.2);
 }
 
-.trash-action-btn--restore:hover {
-  background: var(--accent);
-  color: #ffffff;
-  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
+@media (hover: hover) and (pointer: fine) {
+  .trash-action-btn--restore:hover {
+    background: var(--accent);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
+  }
 }
 
 .trash-action-btn--delete {
@@ -1886,10 +2013,12 @@ select, .editor-category-select {
   border-color: rgba(239, 68, 68, 0.2);
 }
 
-.trash-action-btn--delete:hover {
-  background: #ef4444;
-  color: #ffffff;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+@media (hover: hover) and (pointer: fine) {
+  .trash-action-btn--delete:hover {
+    background: #ef4444;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+  }
 }
 
 /* ========== PINNED NOTES & 3-DOT MENU ========== */
@@ -1958,6 +2087,10 @@ select, .editor-category-select {
   .note-card__menu-btn--visible {
     opacity: 1;
   }
+  .note-card__menu-btn:hover {
+    background: rgba(0, 0, 0, 0.12);
+    color: rgba(0, 0, 0, 0.9);
+  }
 }
 
 @media (hover: none) {
@@ -1969,7 +2102,6 @@ select, .editor-category-select {
   }
 }
 
-.note-card__menu-btn:hover,
 .note-card__menu-btn:active {
   background: rgba(0, 0, 0, 0.12);
   color: rgba(0, 0, 0, 0.9);
@@ -2018,7 +2150,17 @@ select, .editor-category-select {
   transition: background 0.12s ease;
 }
 
-.note-card__dropdown-item:hover {
+@media (hover: hover) and (pointer: fine) {
+  .note-card__dropdown-item:hover {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  .note-card__dropdown-item--danger:hover {
+    background: rgba(239, 68, 68, 0.1);
+  }
+}
+
+.note-card__dropdown-item:active {
   background: rgba(0, 0, 0, 0.05);
 }
 
@@ -2026,7 +2168,7 @@ select, .editor-category-select {
   color: #ef4444;
 }
 
-.note-card__dropdown-item--danger:hover {
+.note-card__dropdown-item--danger:active {
   background: rgba(239, 68, 68, 0.1);
 }
 
@@ -2085,12 +2227,18 @@ select, .editor-category-select {
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
   outline: none;
 }
 
-.editor-pin-btn:hover {
-  background: rgba(0, 0, 0, 0.1);
+@media (hover: hover) and (pointer: fine) {
+  .editor-pin-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+  }
+}
+
+.editor-pin-btn:active {
+  transform: scale(0.96);
 }
 
 .editor-pin-btn--active {
@@ -2234,9 +2382,15 @@ ul[data-type="taskList"] li[data-checked="true"] > div,
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.highlight-menu__swatch:hover {
-  transform: scale(1.15);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+@media (hover: hover) and (pointer: fine) {
+  .highlight-menu__swatch:hover {
+    transform: scale(1.15);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.highlight-menu__swatch:active {
+  transform: scale(0.92);
 }
 
 .highlight-menu__clear-btn {
@@ -2250,12 +2404,18 @@ ul[data-type="taskList"] li[data-checked="true"] > div,
   font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
-.highlight-menu__clear-btn:hover {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+@media (hover: hover) and (pointer: fine) {
+  .highlight-menu__clear-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+  }
+}
+
+.highlight-menu__clear-btn:active {
+  background: rgba(239, 68, 68, 0.15);
 }
 
 mark {
@@ -2330,8 +2490,14 @@ mark {
   transition: color 0.15s ease;
 }
 
-.toast-notification__close:hover {
-  color: var(--text-main);
+@media (hover: hover) and (pointer: fine) {
+  .toast-notification__close:hover {
+    color: var(--text-main);
+  }
+}
+
+.toast-notification__close:active {
+  opacity: 0.7;
 }
 
 @keyframes slideInRight {
@@ -2413,8 +2579,14 @@ mark {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
-.note-card__color-swatch:hover {
-  transform: scale(1.2);
+@media (hover: hover) and (pointer: fine) {
+  .note-card__color-swatch:hover {
+    transform: scale(1.2);
+  }
+}
+
+.note-card__color-swatch:active {
+  transform: scale(0.92);
 }
 
 .note-card__color-swatch--active {
@@ -2598,13 +2770,19 @@ mark {
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
   margin-top: 0.35rem;
 }
 
-.auth-modal__submit-btn:hover:not(:disabled) {
-  opacity: 0.92;
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .auth-modal__submit-btn:hover:not(:disabled) {
+    opacity: 0.92;
+    transform: translateY(-1px);
+  }
+}
+
+.auth-modal__submit-btn:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .auth-modal__spinner-wrapper {
@@ -2647,8 +2825,14 @@ mark {
   transition: transform 0.2s ease;
 }
 
-.sidebar__user-btn:hover {
-  transform: scale(1.08);
+@media (hover: hover) and (pointer: fine) {
+  .sidebar__user-btn:hover {
+    transform: scale(1.08);
+  }
+}
+
+.sidebar__user-btn:active {
+  transform: scale(0.94);
 }
 
 .sidebar__user-avatar {
@@ -2677,9 +2861,16 @@ mark {
   color: #9ca3af !important;
 }
 
-.sidebar__logout-btn:hover {
+@media (hover: hover) and (pointer: fine) {
+  .sidebar__logout-btn:hover {
+    background-color: #fef2f2 !important;
+    color: #ef4444 !important;
+  }
+}
+
+.sidebar__logout-btn:active {
   background-color: #fef2f2 !important;
-  color: #ef4444 !important;
+  transform: scale(0.94);
 }
 
 /* ========== PROFILE MODAL STYLES ========== */
@@ -2733,12 +2924,18 @@ mark {
   cursor: pointer;
   padding: 0.35rem;
   border-radius: 8px;
-  transition: all 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
-.profile-modal__close-btn:hover {
-  background: var(--bg-main);
-  color: var(--text-main);
+@media (hover: hover) and (pointer: fine) {
+  .profile-modal__close-btn:hover {
+    background: var(--bg-main);
+    color: var(--text-main);
+  }
+}
+
+.profile-modal__close-btn:active {
+  transform: scale(0.92);
 }
 
 .profile-modal__error {
@@ -2813,8 +3010,12 @@ mark {
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background 0.15s ease, opacity 0.15s ease, transform 0.15s ease;
   border: none;
+}
+
+.profile-modal__btn:active {
+  transform: scale(0.96);
 }
 
 .profile-modal__btn--upload {
@@ -2822,8 +3023,10 @@ mark {
   color: #ffffff;
 }
 
-.profile-modal__btn--upload:hover {
-  opacity: 0.92;
+@media (hover: hover) and (pointer: fine) {
+  .profile-modal__btn--upload:hover {
+    opacity: 0.92;
+  }
 }
 
 .profile-modal__btn--remove {
@@ -2831,8 +3034,10 @@ mark {
   color: #ef4444;
 }
 
-.profile-modal__btn--remove:hover {
-  background: rgba(239, 68, 68, 0.18);
+@media (hover: hover) and (pointer: fine) {
+  .profile-modal__btn--remove:hover {
+    background: rgba(239, 68, 68, 0.18);
+  }
 }
 
 .profile-modal__field {
@@ -2886,8 +3091,10 @@ mark {
   border: 1px solid var(--border-color);
 }
 
-.profile-modal__btn--cancel:hover {
-  background: rgba(0, 0, 0, 0.05);
+@media (hover: hover) and (pointer: fine) {
+  .profile-modal__btn--cancel:hover {
+    background: rgba(0, 0, 0, 0.05);
+  }
 }
 
 .profile-modal__btn--save {
@@ -2896,8 +3103,10 @@ mark {
   padding: 0.65rem 1.25rem;
 }
 
-.profile-modal__btn--save:hover:not(:disabled) {
-  opacity: 0.92;
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .profile-modal__btn--save:hover:not(:disabled) {
+    opacity: 0.92;
+    transform: translateY(-1px);
+  }
 }
 
