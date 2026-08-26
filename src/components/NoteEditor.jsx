@@ -271,165 +271,156 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
 
   return (
     <div className={`editor-view editor-view--${color}`}>
-      <div className="editor-topbar">
-        <button className="editor-back-btn" onClick={onBack} title="Back to notes">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="19" y1="12" x2="5" y2="12" />
-            <polyline points="12 19 5 12 12 5" />
-          </svg>
-          <span>Back</span>
-        </button>
+      <div className="editor-sticky-header">
+        <div className="editor-topbar">
+          <button className="editor-back-btn" onClick={onBack} title="Back to notes">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
+            </svg>
+            <span>Back</span>
+          </button>
 
-        <div className="editor-topbar__center">
-          <CategoryDropdown
-            categories={categories}
-            value={categoryId}
-            onChange={handleCategoryChange}
-          />
-        </div>
+          <div className="editor-topbar__center">
+            <CategoryDropdown
+              categories={categories}
+              value={categoryId}
+              onChange={handleCategoryChange}
+            />
+          </div>
 
-        {/* Desktop inline actions */}
-        <div className="editor-topbar__desktop-actions">
-          <span className={`save-indicator ${isSaving ? 'save-indicator--saving' : ''}`}>
-            {isSaving ? 'Saving...' : 'Saved'}
-          </span>
+          {/* Desktop inline actions */}
+          <div className="editor-topbar__desktop-actions">
+            <span className={`save-indicator ${isSaving ? 'save-indicator--saving' : ''}`}>
+              {isSaving ? 'Saving...' : 'Saved'}
+            </span>
 
-          {(isPinned || canPinMore) && (
+            {(isPinned || canPinMore) && (
+              <button
+                className={`editor-pin-btn ${isPinned ? 'editor-pin-btn--active' : ''}`}
+                onClick={handlePinToggle}
+                title={isPinned ? 'Unpin note' : 'Pin note (Max 3)'}
+                type="button"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z" />
+                </svg>
+                <span>{isPinned ? 'Pinned' : 'Pin'}</span>
+              </button>
+            )}
+
             <button
-              className={`editor-pin-btn ${isPinned ? 'editor-pin-btn--active' : ''}`}
-              onClick={handlePinToggle}
-              title={isPinned ? 'Unpin note' : 'Pin note (Max 3)'}
-              type="button"
+              className="editor-export-btn"
+              onClick={() =>
+                exportNoteToTxt({
+                  ...note,
+                  title,
+                  content: editor.getJSON(),
+                  color,
+                  category_name: categories.find((c) => c.id === categoryId)?.name,
+                })
+              }
+              title="Export note to .txt file"
             >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z" />
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
-              <span>{isPinned ? 'Pinned' : 'Pin'}</span>
+              <span>Export TXT</span>
             </button>
-          )}
 
-          <button
-            className="editor-export-btn"
-            onClick={() =>
-              exportNoteToTxt({
-                ...note,
-                title,
-                content: editor.getJSON(),
-                color,
-                category_name: categories.find((c) => c.id === categoryId)?.name,
-              })
-            }
-            title="Export note to .txt file"
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            <span>Export TXT</span>
-          </button>
+            <button className="editor-delete-btn" onClick={() => onDelete && onDelete(note)} title="Delete note">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
+            </button>
+          </div>
 
-          <button className="editor-delete-btn" onClick={() => onDelete && onDelete(note)} title="Delete note">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="3 6 5 6 21 6" />
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-            </svg>
-          </button>
-        </div>
+          {/* Mobile 3-dot menu */}
+          <div className="editor-topbar__mobile-menu-wrapper" ref={actionsMenuRef}>
+            <span className={`save-indicator ${isSaving ? 'save-indicator--saving' : ''}`}>
+              {isSaving ? 'Saving...' : 'Saved'}
+            </span>
 
-        {/* Mobile 3-dot menu */}
-        <div className="editor-topbar__mobile-menu-wrapper" ref={actionsMenuRef}>
-          <span className={`save-indicator ${isSaving ? 'save-indicator--saving' : ''}`}>
-            {isSaving ? 'Saving...' : 'Saved'}
-          </span>
+            <button
+              type="button"
+              className={`editor-menu-btn ${isActionsMenuOpen ? 'editor-menu-btn--active' : ''}`}
+              onClick={() => setIsActionsMenuOpen((p) => !p)}
+              title="Note Actions"
+              aria-label="Note Actions"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="5" r="2" />
+                <circle cx="12" cy="12" r="2" />
+                <circle cx="12" cy="19" r="2" />
+              </svg>
+            </button>
 
-          <button
-            type="button"
-            className={`editor-menu-btn ${isActionsMenuOpen ? 'editor-menu-btn--active' : ''}`}
-            onClick={() => setIsActionsMenuOpen((p) => !p)}
-            title="Note Actions"
-            aria-label="Note Actions"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <circle cx="12" cy="5" r="2" />
-              <circle cx="12" cy="12" r="2" />
-              <circle cx="12" cy="19" r="2" />
-            </svg>
-          </button>
+            {isActionsMenuOpen && (
+              <div className="editor-actions-menu">
+                {(isPinned || canPinMore) && (
+                  <button
+                    type="button"
+                    className={`editor-actions-menu__item ${isPinned ? 'editor-actions-menu__item--active' : ''}`}
+                    onClick={() => {
+                      setIsActionsMenuOpen(false)
+                      handlePinToggle()
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z" />
+                    </svg>
+                    <span>{isPinned ? 'Unpin Note' : 'Pin Note'}</span>
+                  </button>
+                )}
 
-          {isActionsMenuOpen && (
-            <div className="editor-actions-menu">
-              {(isPinned || canPinMore) && (
                 <button
                   type="button"
-                  className={`editor-actions-menu__item ${isPinned ? 'editor-actions-menu__item--active' : ''}`}
+                  className="editor-actions-menu__item"
                   onClick={() => {
                     setIsActionsMenuOpen(false)
-                    handlePinToggle()
+                    exportNoteToTxt({
+                      ...note,
+                      title,
+                      content: editor.getJSON(),
+                      color,
+                      category_name: categories.find((c) => c.id === categoryId)?.name,
+                    })
                   }}
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z" />
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
                   </svg>
-                  <span>{isPinned ? 'Unpin Note' : 'Pin Note'}</span>
+                  <span>Export to TXT</span>
                 </button>
-              )}
 
-              <button
-                type="button"
-                className="editor-actions-menu__item"
-                onClick={() => {
-                  setIsActionsMenuOpen(false)
-                  exportNoteToTxt({
-                    ...note,
-                    title,
-                    content: editor.getJSON(),
-                    color,
-                    category_name: categories.find((c) => c.id === categoryId)?.name,
-                  })
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-                <span>Export to TXT</span>
-              </button>
+                <div className="editor-actions-menu__divider" />
 
-              <div className="editor-actions-menu__divider" />
-
-              <button
-                type="button"
-                className="editor-actions-menu__item editor-actions-menu__item--delete"
-                onClick={() => {
-                  setIsActionsMenuOpen(false)
-                  if (onDelete) onDelete(note)
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="3 6 5 6 21 6" />
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                </svg>
-                <span>Delete Note</span>
-              </button>
-            </div>
-          )}
+                <button
+                  type="button"
+                  className="editor-actions-menu__item editor-actions-menu__item--delete"
+                  onClick={() => {
+                    setIsActionsMenuOpen(false)
+                    if (onDelete) onDelete(note)
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  </svg>
+                  <span>Delete Note</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      <textarea
-        ref={titleTextareaRef}
-        className="editor-title-input"
-        value={title}
-        onChange={handleTitleChange}
-        onKeyDown={handleTitleKeyDown}
-        placeholder="Note title..."
-        rows={1}
-      />
-
-      <div className="editor-toolbar">
-        <div className="editor-toolbar__row editor-toolbar__row--formatting">
+        <div className="editor-toolbar">
+          <div className="editor-toolbar__row editor-toolbar__row--formatting">
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleBold().run()}
             isActive={editor.isActive('bold')}
@@ -599,10 +590,21 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
           </ToolbarButton>
         </div>
       </div>
-
-      <div className="editor-content-wrapper">
-        <EditorContent editor={editor} className="editor-content" />
-      </div>
     </div>
-  )
+
+    <textarea
+      ref={titleTextareaRef}
+      className="editor-title-input"
+      value={title}
+      onChange={handleTitleChange}
+      onKeyDown={handleTitleKeyDown}
+      placeholder="Note title..."
+      rows={1}
+    />
+
+    <div className="editor-content-wrapper">
+      <EditorContent editor={editor} className="editor-content" />
+    </div>
+  </div>
+)
 }

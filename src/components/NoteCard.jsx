@@ -104,8 +104,6 @@ export default function NoteCard({
     <div
       className={`note-card note-card--${note.color || 'orange'} ${note.is_pinned ? 'note-card--pinned' : ''}`}
       onClick={() => onClick(note)}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       role="button"
       tabIndex={0}
       style={style}
@@ -136,7 +134,7 @@ export default function NoteCard({
         <div className="note-card__menu-wrapper" ref={menuRef}>
           <button
             type="button"
-            className={`note-card__menu-btn ${isMenuOpen || isHovered ? 'note-card__menu-btn--visible' : ''}`}
+            className={`note-card__menu-btn ${isMenuOpen ? 'note-card__menu-btn--visible' : ''}`}
             onClick={handleMenuToggle}
             aria-label="Note options"
             title="Note options"
