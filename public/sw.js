@@ -1,4 +1,4 @@
-const CACHE_NAME = 'noteroo-cache-v1'
+const CACHE_NAME = 'noteroo-cache-v2'
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -8,17 +8,17 @@ const STATIC_ASSETS = [
 
 // Install event - Cache static shell assets
 self.addEventListener('install', (event) => {
+  self.skipWaiting()
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(STATIC_ASSETS).catch((err) => {
-        console.warn('PWA: Failed to cache some static assets during install', err)
+        console.warn('PWA: Failed to cache static assets during install', err)
       })
     })
   )
-  self.skipWaiting()
 })
 
-// Activate event - Clean up old caches
+// Activate event - Clean up old caches immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -29,14 +29,12 @@ self.addEventListener('activate', (event) => {
           }
         })
       )
-    })
+    }).then(() => self.clients.claim())
   )
-  self.clients.claim()
 })
 
-// Fetch event - Network-first strategy for dynamic note content / API, cache fallback for assets
+// Fetch event - Network-first strategy for all navigation and assets
 self.addEventListener('fetch', (event) => {
-  // Ignore non-GET requests or chrome-extension / API requests
   if (event.request.method !== 'GET' || event.request.url.includes('/api/')) {
     return
   }
@@ -44,7 +42,6 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Cache successful responses for static assets
         if (response && response.status === 200 && response.type === 'basic') {
           const responseClone = response.clone()
           caches.open(CACHE_NAME).then((cache) => {

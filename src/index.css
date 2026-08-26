@@ -293,6 +293,14 @@ body {
 .note-card--yellow { background: linear-gradient(135deg, #FFF9C4, #FFF176); }
 
 /* Card Content */
+.note-card__content,
+.note-card__title,
+.note-card__footer,
+.note-card__date,
+.note-card__badges {
+  pointer-events: none;
+}
+
 .note-card__content {
   flex: 1;
   display: flex;

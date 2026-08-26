@@ -97,13 +97,43 @@ export default function NoteCard({
     }
   }
 
-  // Show pin option if note is already pinned (so user can unpin), OR if canPinMore is true
-  const showPinOption = note.is_pinned || canPinMore
+  const touchStartRef = useRef({ x: 0, y: 0, moved: false, time: 0 })
+
+  const handleTouchStart = (e) => {
+    if (e.touches && e.touches[0]) {
+      touchStartRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        moved: false,
+        time: Date.now(),
+      }
+    }
+  }
+
+  const handleTouchMove = (e) => {
+    if (e.touches && e.touches[0]) {
+      const dx = Math.abs(e.touches[0].clientX - touchStartRef.current.x)
+      const dy = Math.abs(e.touches[0].clientY - touchStartRef.current.y)
+      if (dx > 10 || dy > 10) {
+        touchStartRef.current.moved = true
+      }
+    }
+  }
+
+  const handleTouchEnd = (e) => {
+    if (!touchStartRef.current.moved && Date.now() - touchStartRef.current.time < 500) {
+      if (menuRef.current && menuRef.current.contains(e.target)) return
+      onClick(note)
+    }
+  }
 
   return (
     <div
       className={`note-card note-card--${note.color || 'orange'} ${note.is_pinned ? 'note-card--pinned' : ''}`}
       onClick={() => onClick(note)}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       role="button"
       tabIndex={0}
       style={style}
