@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import NoteCard from './NoteCard'
+import { fastTap } from '../lib/fastTap'
 
 export default function NoteGrid({
   notes = [],
@@ -50,7 +51,7 @@ export default function NoteGrid({
           <button
             type="button"
             className={`category-tab ${selectedCategory === 'all' ? 'category-tab--active' : ''}`}
-            onClick={() => setSelectedCategory('all')}
+            {...fastTap(() => setSelectedCategory('all'))}
           >
             All ({safeNotes.length})
           </button>
@@ -61,7 +62,7 @@ export default function NoteGrid({
                 key={cat.id}
                 type="button"
                 className={`category-tab ${selectedCategory === cat.id ? 'category-tab--active' : ''}`}
-                onClick={() => setSelectedCategory(cat.id)}
+                {...fastTap(() => setSelectedCategory(cat.id))}
               >
                 <span className="category-tab__dot" style={{ backgroundColor: cat.color || '#7c3aed' }} />
                 {cat.name} ({count})
@@ -72,7 +73,7 @@ export default function NoteGrid({
             <button
               type="button"
               className={`category-tab ${selectedCategory === 'uncategorized' ? 'category-tab--active' : ''}`}
-              onClick={() => setSelectedCategory('uncategorized')}
+              {...fastTap(() => setSelectedCategory('uncategorized'))}
             >
               Uncategorized ({safeNotes.filter((n) => !n?.category_id).length})
             </button>

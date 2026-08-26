@@ -222,10 +222,13 @@ textarea,
     background: #f0f0f3;
     color: var(--text-main);
   }
+
+  .category-tab:active {
+    transform: scale(0.95);
+  }
 }
 
 .category-tab:active {
-  transform: scale(0.95);
   background: #ebebee;
 }
 
@@ -242,11 +245,14 @@ textarea,
     background: #000000;
     color: #ffffff;
   }
+
+  .category-tab--active:active {
+    transform: scale(0.95);
+  }
 }
 
 .category-tab--active:active {
   background: var(--text-main);
-  transform: scale(0.95);
 }
 
 .category-tab__dot {
@@ -254,6 +260,7 @@ textarea,
   height: 8px;
   border-radius: 50%;
   display: inline-block;
+  pointer-events: none;
 }
 
 /* ========== NOTE GRID ========== */
@@ -293,10 +300,13 @@ textarea,
     transform: translateY(-4px);
     box-shadow: var(--shadow-md);
   }
+
+  .note-card:active {
+    transform: scale(0.98);
+  }
 }
 
 .note-card:active {
-  transform: scale(0.98);
   opacity: 0.92;
 }
 
@@ -318,6 +328,7 @@ textarea,
   flex: 1;
   display: flex;
   flex-direction: column;
+  pointer-events: none;
 }
 
 .note-card__category-badge {
@@ -337,6 +348,7 @@ textarea,
   text-transform: uppercase;
   letter-spacing: 0.03em;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  pointer-events: none;
 }
 
 .note-card__category-dot {
@@ -345,6 +357,15 @@ textarea,
   border-radius: 50%;
   display: inline-block;
   flex-shrink: 0;
+  pointer-events: none;
+}
+
+.note-card__pin-badge {
+  pointer-events: none;
+}
+
+.note-card__badges {
+  pointer-events: none;
 }
 
 /* Larger title font size */
@@ -359,6 +380,7 @@ textarea,
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  pointer-events: none;
 }
 
 /* Card Footer */
@@ -367,12 +389,14 @@ textarea,
   justify-content: space-between;
   align-items: center;
   margin-top: 0.5rem;
+  pointer-events: none;
 }
 
 .note-card__date {
   font-size: 0.75rem;
   font-weight: 500;
   color: rgba(0, 0, 0, 0.5);
+  pointer-events: none;
 }
 
 .note-card__actions {

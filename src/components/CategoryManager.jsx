@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import ConfirmModal from './ConfirmModal'
+import { fastTap } from '../lib/fastTap'
 
 const COLOR_PRESETS = [
   '#7c3aed', // Purple
@@ -81,7 +82,7 @@ export default function CategoryManager({ categories, onCreateCategory, onUpdate
   return (
     <div className="category-manager">
       <div className="category-manager__header">
-        <button className="editor-back-btn" onClick={onBack} title="Back to dashboard">
+        <button className="editor-back-btn" {...fastTap(onBack)} title="Back to dashboard">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="19" y1="12" x2="5" y2="12" />
             <polyline points="12 19 5 12 12 5" />

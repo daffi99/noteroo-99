@@ -1,5 +1,6 @@
 import React from 'react';
 import './Sidebar.css';
+import { fastTap } from '../lib/fastTap';
 
 const Sidebar = ({ activeView, onNavigate, onNewNote, user, onOpenProfile, onLogout }) => {
   const userInitial = (user?.name || user?.email || 'U').charAt(0).toUpperCase();
@@ -37,7 +38,7 @@ const Sidebar = ({ activeView, onNavigate, onNewNote, user, onOpenProfile, onLog
         className="sidebar__logo" 
         title="Noteroo" 
         aria-label="Noteroo logo"
-        onClick={() => onNavigate('dashboard')}
+        {...fastTap(() => onNavigate('dashboard'))}
       >
         <img src="/favicon.png" alt="Noteroo Logo" className="sidebar__logo-img" />
       </div>
@@ -45,7 +46,7 @@ const Sidebar = ({ activeView, onNavigate, onNewNote, user, onOpenProfile, onLog
       <button
         type="button"
         className="sidebar__add-btn"
-        onClick={onNewNote}
+        {...fastTap(onNewNote)}
         aria-label="Create new note"
         title="Create new note"
       >
@@ -70,7 +71,7 @@ const Sidebar = ({ activeView, onNavigate, onNewNote, user, onOpenProfile, onLog
         <button
           type="button"
           className={`sidebar__nav-item ${activeView === 'dashboard' ? 'sidebar__nav-item--active' : ''}`}
-          onClick={() => onNavigate('dashboard')}
+          {...fastTap(() => onNavigate('dashboard'))}
           title="All Notes"
           aria-label="All Notes"
         >
@@ -85,7 +86,7 @@ const Sidebar = ({ activeView, onNavigate, onNewNote, user, onOpenProfile, onLog
         <button
           type="button"
           className={`sidebar__nav-item ${activeView === 'categories' ? 'sidebar__nav-item--active' : ''}`}
-          onClick={() => onNavigate('categories')}
+          {...fastTap(() => onNavigate('categories'))}
           title="Manage Categories"
           aria-label="Manage Categories"
         >
@@ -98,7 +99,7 @@ const Sidebar = ({ activeView, onNavigate, onNewNote, user, onOpenProfile, onLog
         <button
           type="button"
           className={`sidebar__nav-item ${activeView === 'trash' ? 'sidebar__nav-item--active' : ''}`}
-          onClick={() => onNavigate('trash')}
+          {...fastTap(() => onNavigate('trash'))}
           title="Trash"
           aria-label="Trash"
         >
@@ -115,7 +116,7 @@ const Sidebar = ({ activeView, onNavigate, onNewNote, user, onOpenProfile, onLog
             <button
               type="button"
               className="sidebar__user-btn"
-              onClick={onOpenProfile}
+              {...fastTap(onOpenProfile)}
               title={`${user.name || user.email} • Click to Edit Profile`}
               aria-label="Profile Settings"
             >
@@ -131,7 +132,7 @@ const Sidebar = ({ activeView, onNavigate, onNewNote, user, onOpenProfile, onLog
             <button
               type="button"
               className="sidebar__nav-item sidebar__logout-btn"
-              onClick={onLogout}
+              {...fastTap(onLogout)}
               title="Log Out"
               aria-label="Log Out"
             >
@@ -147,7 +148,7 @@ const Sidebar = ({ activeView, onNavigate, onNewNote, user, onOpenProfile, onLog
         <button
           type="button"
           className="sidebar__version"
-          onClick={handleVersionClick}
+          {...fastTap(handleVersionClick)}
           title={`App Version ${rawVersion} (Tap to force reload)`}
           aria-label={`App Version ${rawVersion}`}
         >

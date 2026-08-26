@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { fastTap } from '../lib/fastTap'
 
 const CARD_COLORS = [
   { name: 'orange', label: 'Orange', hex: '#FFB74D' },
@@ -100,10 +101,14 @@ export default function NoteCard({
 
   const showPinOption = note.is_pinned || canPinMore
 
+  const cardTapHandlers = fastTap(() => {
+    if (onClick) onClick(note)
+  })
+
   return (
     <div
       className={`note-card note-card--${note.color || 'orange'} ${note.is_pinned ? 'note-card--pinned' : ''} ${isMenuOpen ? 'note-card--menu-open' : ''}`}
-      onClick={() => onClick && onClick(note)}
+      {...cardTapHandlers}
       role="button"
       tabIndex={0}
       style={style}

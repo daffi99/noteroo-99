@@ -1,5 +1,6 @@
 import React from 'react'
 import './NoteEditorSkeleton.css'
+import { fastTap } from '../lib/fastTap'
 
 export default function NoteEditorSkeleton({ onBack }) {
   return (
@@ -7,7 +8,7 @@ export default function NoteEditorSkeleton({ onBack }) {
       <div className="editor-topbar">
         <button 
           className="editor-back-btn" 
-          onClick={onBack} 
+          {...fastTap(onBack)} 
           title="Back to notes"
           type="button"
         >

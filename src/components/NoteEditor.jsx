@@ -10,6 +10,8 @@ import { exportNoteToTxt } from '../utils/export'
 import CategoryDropdown from './CategoryDropdown'
 import { MathCalculationExtension } from '../lib/tiptap-math-extension'
 
+import { fastTap } from '../lib/fastTap'
+
 const HIGHLIGHT_COLORS = [
   { name: 'Yellow', color: '#fef08a' },
   { name: 'Green', color: '#bbf7d0' },
@@ -273,7 +275,7 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
     <div className={`editor-view editor-view--${color}`}>
       <div className="editor-sticky-header">
         <div className="editor-topbar">
-          <button className="editor-back-btn" onClick={onBack} title="Back to notes">
+          <button className="editor-back-btn" {...fastTap(onBack)} title="Back to notes">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="19" y1="12" x2="5" y2="12" />
               <polyline points="12 19 5 12 12 5" />
