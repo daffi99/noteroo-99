@@ -116,20 +116,32 @@
 }
 
 .sidebar__version {
+  background: transparent;
+  border: none;
+  font-family: inherit;
   font-size: 0.68rem;
   font-weight: 700;
   color: var(--text-muted, #86868b);
   letter-spacing: 0.05em;
   user-select: none;
   opacity: 0.75;
-  transition: opacity 0.2s ease;
+  transition: all 0.2s ease;
   text-align: center;
-  padding-bottom: 4px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .sidebar__version:hover {
   opacity: 1;
   color: var(--text-main, #1d1d1f);
+}
+
+.sidebar__version:active {
+  transform: scale(0.92);
+  background: rgba(0, 0, 0, 0.05);
 }
 
 /* Responsive Bottom Navigation Bar on Mobile */
@@ -200,13 +212,17 @@
     margin-top: 0;
   }
 
+  .sidebar__logout-btn {
+    display: none;
+  }
+
   .sidebar__user-btn {
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }
 
   .sidebar__version {
-    padding-bottom: 0;
+    padding: 2px 4px;
     font-size: 0.65rem;
   }
 }

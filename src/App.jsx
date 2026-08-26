@@ -374,6 +374,9 @@ function App() {
               <SearchBar
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
+                user={user}
+                onOpenProfile={() => setIsProfileOpen(true)}
+                onLogout={handleLogout}
               />
             </div>
             {isLoading ? (

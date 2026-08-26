@@ -8,6 +8,29 @@ const Sidebar = ({ activeView, onNavigate, onNewNote, user, onOpenProfile, onLog
   const versionParts = rawVersion.split('.');
   const displayVersion = `V${versionParts[0]}.${versionParts[1]}`;
 
+  const handleVersionClick = async () => {
+    // Only act as hard refresh on mobile / touch / PWA
+    const isMobile = window.innerWidth <= 768 || window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+    if (!isMobile) return;
+
+    try {
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const reg of registrations) {
+          await reg.update();
+        }
+      }
+      if ('caches' in window) {
+        const cacheKeys = await caches.keys();
+        await Promise.all(cacheKeys.map((key) => caches.delete(key)));
+      }
+    } catch (e) {
+      console.warn('Error clearing cache on hard refresh:', e);
+    }
+    // Hard reload
+    window.location.reload(true);
+  };
+
   return (
     <aside className="sidebar">
       <div 
@@ -121,9 +144,15 @@ const Sidebar = ({ activeView, onNavigate, onNewNote, user, onOpenProfile, onLog
           </div>
         )}
 
-        <div className="sidebar__version" title={`App Version ${rawVersion}`}>
+        <button
+          type="button"
+          className="sidebar__version"
+          onClick={handleVersionClick}
+          title={`App Version ${rawVersion} (Tap to force reload)`}
+          aria-label={`App Version ${rawVersion}`}
+        >
           {displayVersion}
-        </div>
+        </button>
       </div>
     </aside>
   );
