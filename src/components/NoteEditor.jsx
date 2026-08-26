@@ -502,6 +502,8 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
           </ToolbarButton>
         </div>
 
+        <div className="toolbar-divider toolbar-divider--desktop-only" />
+
         <div className="editor-toolbar__row editor-toolbar__row--blocks">
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleTaskList().run()}

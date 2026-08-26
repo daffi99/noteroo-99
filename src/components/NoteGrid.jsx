@@ -45,6 +45,7 @@ export default function NoteGrid({
       <div className="category-bar-row">
         <div className="category-tabs">
           <button
+            type="button"
             className={`category-tab ${selectedCategory === 'all' ? 'category-tab--active' : ''}`}
             onClick={() => setSelectedCategory('all')}
           >
@@ -55,6 +56,7 @@ export default function NoteGrid({
             return (
               <button
                 key={cat.id}
+                type="button"
                 className={`category-tab ${selectedCategory === cat.id ? 'category-tab--active' : ''}`}
                 onClick={() => setSelectedCategory(cat.id)}
               >
@@ -65,6 +67,7 @@ export default function NoteGrid({
           })}
           {notes.some((n) => !n.category_id) && (
             <button
+              type="button"
               className={`category-tab ${selectedCategory === 'uncategorized' ? 'category-tab--active' : ''}`}
               onClick={() => setSelectedCategory('uncategorized')}
             >

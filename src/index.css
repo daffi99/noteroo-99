@@ -189,12 +189,23 @@ body {
   font-family: var(--font-family);
   cursor: pointer;
   white-space: nowrap;
-  transition: all var(--transition-fast);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: transform 0.1s ease, background 0.15s ease, color 0.15s ease;
 }
 
-.category-tab:hover {
-  background: #f0f0f3;
-  color: var(--text-main);
+@media (hover: hover) and (pointer: fine) {
+  .category-tab:hover {
+    background: #f0f0f3;
+    color: var(--text-main);
+  }
+}
+
+.category-tab:active {
+  transform: scale(0.95);
+  background: #ebebee;
 }
 
 .category-tab--active {
@@ -205,9 +216,16 @@ body {
   box-shadow: var(--shadow-xs);
 }
 
-.category-tab--active:hover {
-  background: #000000;
-  color: #ffffff;
+@media (hover: hover) and (pointer: fine) {
+  .category-tab--active:hover {
+    background: #000000;
+    color: #ffffff;
+  }
+}
+
+.category-tab--active:active {
+  background: var(--text-main);
+  transform: scale(0.95);
 }
 
 .category-tab__dot {
@@ -237,7 +255,11 @@ body {
   display: flex;
   flex-direction: column;
   cursor: pointer;
-  transition: transform var(--transition), box-shadow var(--transition);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
   border: none;
   box-shadow: var(--shadow-xs);
   animation: cardFadeIn 0.35s ease-out both;
@@ -245,9 +267,16 @@ body {
   outline: none;
 }
 
-.note-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-md);
+@media (hover: hover) and (pointer: fine) {
+  .note-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.note-card:active {
+  transform: scale(0.98);
+  opacity: 0.92;
 }
 
 .note-card:focus-visible {
@@ -1123,6 +1152,7 @@ select, .editor-category-select {
 /* ========== EDITOR TOOLBAR ========== */
 .editor-toolbar {
   display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 2px;
   padding: 0.4rem 0.5rem;
@@ -1130,11 +1160,18 @@ select, .editor-category-select {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   margin-bottom: 0.75rem;
-  position: sticky;
-  top: calc((var(--main-padding-top, 2rem) * -1) + 60px);
-  z-index: 15;
   box-shadow: var(--shadow-xs);
   flex-wrap: wrap;
+}
+
+.editor-toolbar__row {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.toolbar-divider--desktop-only {
+  display: block;
 }
 
 .toolbar-btn {
@@ -1504,6 +1541,10 @@ select, .editor-category-select {
     height: 16px;
     margin: 0 1px;
     flex-shrink: 0;
+  }
+
+  .toolbar-divider--desktop-only {
+    display: none;
   }
 
   .editor-view {
