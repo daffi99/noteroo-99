@@ -2,17 +2,20 @@ import { useState, useRef } from 'react'
 import NoteCard from './NoteCard'
 
 export default function NoteGrid({
-  notes,
+  notes = [],
   categories = [],
   onNoteClick,
-  searchQuery,
+  searchQuery = '',
   onTogglePin,
   onDeleteNote,
   onChangeColor,
 }) {
+  const safeNotes = Array.isArray(notes) ? notes : []
+  const safeCategories = Array.isArray(categories) ? categories : []
   const [selectedCategory, setSelectedCategory] = useState('all')
 
-  const filteredNotes = notes.filter((note) => {
+  const filteredNotes = safeNotes.filter((note) => {
+    if (!note) return false
     const matchesSearch = (note.title || '').toLowerCase().includes((searchQuery || '').toLowerCase())
     if (!matchesSearch) return false
 
@@ -36,7 +39,7 @@ export default function NoteGrid({
     return timeB - timeA
   })
 
-  const totalPinnedInApp = notes.filter((n) => n.is_pinned).length
+  const totalPinnedInApp = safeNotes.filter((n) => n?.is_pinned).length
   const tabTouchRef = useRef({ x: 0, y: 0, moved: false, time: 0 })
 
   const handleTabTouchStart = (e) => {
@@ -79,10 +82,10 @@ export default function NoteGrid({
             onTouchMove={handleTabTouchMove}
             onTouchEnd={() => handleTabTouchEnd('all')}
           >
-            All ({notes.length})
+            All ({safeNotes.length})
           </button>
-          {categories.map((cat) => {
-            const count = notes.filter((n) => n.category_id === cat.id).length
+          {safeCategories.map((cat) => {
+            const count = safeNotes.filter((n) => n?.category_id === cat?.id).length
             return (
               <button
                 key={cat.id}
@@ -98,7 +101,7 @@ export default function NoteGrid({
               </button>
             )
           })}
-          {notes.some((n) => !n.category_id) && (
+          {safeNotes.some((n) => !n?.category_id) && (
             <button
               type="button"
               className={`category-tab ${selectedCategory === 'uncategorized' ? 'category-tab--active' : ''}`}
@@ -107,7 +110,7 @@ export default function NoteGrid({
               onTouchMove={handleTabTouchMove}
               onTouchEnd={() => handleTabTouchEnd('uncategorized')}
             >
-              Uncategorized ({notes.filter((n) => !n.category_id).length})
+              Uncategorized ({safeNotes.filter((n) => !n?.category_id).length})
             </button>
           )}
         </div>

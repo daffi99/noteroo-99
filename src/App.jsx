@@ -111,10 +111,12 @@ function App() {
         api.getNotes(),
         api.getCategories(),
       ])
-      setNotes(notesData)
-      setCategories(categoriesData)
+      setNotes(Array.isArray(notesData) ? notesData : [])
+      setCategories(Array.isArray(categoriesData) ? categoriesData : [])
     } catch (err) {
       console.error('Error loading data:', err)
+      setNotes([])
+      setCategories([])
     } finally {
       setIsLoading(false)
     }
@@ -123,18 +125,20 @@ function App() {
   const fetchNotes = async () => {
     try {
       const data = await api.getNotes()
-      setNotes(data)
+      setNotes(Array.isArray(data) ? data : [])
     } catch (err) {
       console.error('Error fetching notes:', err)
+      setNotes([])
     }
   }
 
   const fetchCategories = async () => {
     try {
       const data = await api.getCategories()
-      setCategories(data)
+      setCategories(Array.isArray(data) ? data : [])
     } catch (err) {
       console.error('Error fetching categories:', err)
+      setCategories([])
     }
   }
 

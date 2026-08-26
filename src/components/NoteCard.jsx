@@ -120,10 +120,12 @@ export default function NoteCard({
     }
   }
 
+  if (!note) return null
+
   const handleTouchEnd = (e) => {
     if (!touchStartRef.current.moved && Date.now() - touchStartRef.current.time < 500) {
       if (menuRef.current && menuRef.current.contains(e.target)) return
-      onClick(note)
+      if (onClick) onClick(note)
     }
   }
 
@@ -132,14 +134,14 @@ export default function NoteCard({
   return (
     <div
       className={`note-card note-card--${note.color || 'orange'} ${note.is_pinned ? 'note-card--pinned' : ''}`}
-      onClick={() => onClick(note)}
+      onClick={() => onClick && onClick(note)}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       role="button"
       tabIndex={0}
       style={style}
-      onKeyDown={(e) => e.key === 'Enter' && onClick(note)}
+      onKeyDown={(e) => e.key === 'Enter' && onClick && onClick(note)}
     >
       {/* Top Row: Badges (Pinned + Category) on Left, 3-Dot Options Menu on Right */}
       <div className="note-card__header">
