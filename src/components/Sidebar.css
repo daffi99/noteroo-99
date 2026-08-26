@@ -217,6 +217,16 @@
   }
 
   .sidebar__user-btn {
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }
@@ -224,6 +234,9 @@
   .sidebar__version {
     padding: 2px 4px;
     font-size: 0.65rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 
