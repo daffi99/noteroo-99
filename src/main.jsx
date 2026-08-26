@@ -3,18 +3,13 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 
-// Register Service Worker for PWA support
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/sw.js')
-      .then((reg) => {
-        reg.update()
-      })
-      .catch((err) => {
-        console.warn('Noteroo PWA ServiceWorker registration failed: ', err)
-      })
-  })
+// Clean up any stale service workers to ensure 100% reliable direct network loading on iOS Safari/PWA
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    for (const registration of registrations) {
+      registration.unregister()
+    }
+  }).catch(() => {})
 }
 
 createRoot(document.getElementById('root')).render(
