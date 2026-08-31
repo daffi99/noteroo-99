@@ -2,6 +2,27 @@ import { useState } from 'react'
 import NoteCard from './NoteCard'
 import { fastTap } from '../lib/fastTap'
 
+function extractTextFromContent(content) {
+  if (!content) return ''
+  try {
+    const json = typeof content === 'string' ? JSON.parse(content) : content
+    const textPieces = []
+    function traverse(node) {
+      if (!node) return
+      if (node.type === 'text' && typeof node.text === 'string') {
+        textPieces.push(node.text)
+      }
+      if (Array.isArray(node.content)) {
+        node.content.forEach(traverse)
+      }
+    }
+    traverse(json)
+    return textPieces.join(' ')
+  } catch {
+    return typeof content === 'string' ? content : ''
+  }
+}
+
 export default function NoteGrid({
   notes = [],
   categories = [],
@@ -17,8 +38,12 @@ export default function NoteGrid({
 
   const filteredNotes = safeNotes.filter((note) => {
     if (!note) return false
-    const matchesSearch = (note.title || '').toLowerCase().includes((searchQuery || '').toLowerCase())
-    if (!matchesSearch) return false
+    const q = (searchQuery || '').trim().toLowerCase()
+    if (q) {
+      const titleMatches = (note.title || '').toLowerCase().includes(q)
+      const contentMatches = extractTextFromContent(note.content).toLowerCase().includes(q)
+      if (!titleMatches && !contentMatches) return false
+    }
 
     if (selectedCategory === 'all') return true
     if (selectedCategory === 'uncategorized') return !note.category_id

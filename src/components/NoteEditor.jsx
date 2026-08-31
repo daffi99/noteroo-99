@@ -21,11 +21,72 @@ const HIGHLIGHT_COLORS = [
   { name: 'Orange', color: '#fed7aa' },
 ]
 
-function ToolbarButton({ onClick, isActive, children, title }) {
+function transformSelectionCase(editor, mode = 'toggle') {
+  if (!editor || !editor.view) return
+  const { state, dispatch } = editor.view
+  const { selection, doc } = state
+  let { from, to } = selection
+
+  // If collapsed cursor (no text selected), expand to current word
+  if (from === to) {
+    const $pos = selection.$from
+    const textBefore = $pos.parent.textBetween(0, $pos.parentOffset, null, '\ufffc')
+    const textAfter = $pos.parent.textBetween($pos.parentOffset, $pos.parent.content.size, null, '\ufffc')
+
+    const beforeMatch = textBefore.match(/\w+$/)
+    const afterMatch = textAfter.match(/^\w+/)
+
+    if (beforeMatch || afterMatch) {
+      const wordStart = $pos.pos - (beforeMatch ? beforeMatch[0].length : 0)
+      const wordEnd = $pos.pos + (afterMatch ? afterMatch[0].length : 0)
+      from = wordStart
+      to = wordEnd
+    } else {
+      from = $pos.start()
+      to = $pos.end()
+    }
+  }
+
+  if (from >= to) return
+
+  const selectedText = doc.textBetween(from, to)
+  if (!selectedText) return
+
+  let newText = selectedText
+  if (mode === 'uppercase') {
+    newText = selectedText.toUpperCase()
+  } else if (mode === 'lowercase') {
+    newText = selectedText.toLowerCase()
+  } else if (mode === 'capitalize') {
+    newText = selectedText.replace(/\b(\w)(\w*)/g, (_, f, r) => f.toUpperCase() + r.toLowerCase())
+  } else if (mode === 'sentence') {
+    newText = selectedText.toLowerCase().replace(/(^\s*\w|[.!?]\s+\w)/g, (c) => c.toUpperCase())
+  } else {
+    // 'toggle'
+    const isAllUpper = selectedText === selectedText.toUpperCase() && selectedText !== selectedText.toLowerCase()
+    const isAllLower = selectedText === selectedText.toLowerCase() && selectedText !== selectedText.toUpperCase()
+    if (isAllUpper) {
+      newText = selectedText.toLowerCase()
+    } else if (isAllLower) {
+      newText = selectedText.replace(/\b(\w)(\w*)/g, (_, f, r) => f.toUpperCase() + r.toLowerCase())
+    } else {
+      newText = selectedText.toUpperCase()
+    }
+  }
+
+  if (newText !== selectedText) {
+    const tr = state.tr.insertText(newText, from, to)
+    tr.setSelection(TextSelection.create(tr.doc, from, from + newText.length))
+    dispatch(tr)
+  }
+}
+
+function ToolbarButton({ onClick, isActive, children, title, onMouseDown }) {
   return (
     <button
       className={`toolbar-btn ${isActive ? 'toolbar-btn--active' : ''}`}
       onClick={onClick}
+      onMouseDown={onMouseDown || ((e) => e.preventDefault())}
       title={title}
       type="button"
     >
@@ -33,6 +94,89 @@ function ToolbarButton({ onClick, isActive, children, title }) {
     </button>
   )
 }
+
+// Custom TaskItem that prevents virtual keyboard from auto-opening on mobile/PWA
+const CustomTaskItem = TaskItem.extend({
+  addNodeView() {
+    return ({ node, HTMLAttributes, getPos, editor }) => {
+      const listItem = document.createElement('li')
+      const checkboxWrapper = document.createElement('label')
+      const checkboxStyler = document.createElement('span')
+      const checkbox = document.createElement('input')
+      const content = document.createElement('div')
+
+      checkboxWrapper.contentEditable = 'false'
+      checkbox.type = 'checkbox'
+      checkbox.tabIndex = -1
+
+      // Stop mousedown/pointerdown/touchstart from focusing the editor or contenteditable
+      checkbox.addEventListener('mousedown', (e) => e.preventDefault())
+      checkbox.addEventListener('pointerdown', (e) => e.stopPropagation())
+      checkboxWrapper.addEventListener('mousedown', (e) => e.preventDefault())
+      checkboxWrapper.addEventListener('pointerdown', (e) => e.stopPropagation())
+      checkboxWrapper.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true })
+
+      checkbox.addEventListener('change', (event) => {
+        if (!editor.isEditable && !this.options.onReadOnlyChecked) {
+          checkbox.checked = !checkbox.checked
+          return
+        }
+
+        const { checked } = event.target
+
+        if (editor.isEditable && typeof getPos === 'function') {
+          const position = getPos()
+          if (typeof position === 'number') {
+            const { state, view } = editor
+            const currentNode = state.doc.nodeAt(position)
+            if (currentNode) {
+              const tr = state.tr.setNodeMarkup(position, undefined, {
+                ...currentNode.attrs,
+                checked,
+              })
+              // Dispatch transaction directly without editor.chain().focus()
+              // This stops mobile PWA virtual keyboard from popping up on checkbox tap!
+              view.dispatch(tr)
+            }
+          }
+        }
+
+        if (!editor.isEditable && this.options.onReadOnlyChecked) {
+          if (!this.options.onReadOnlyChecked(node, checked)) {
+            checkbox.checked = !checkbox.checked
+          }
+        }
+      })
+
+      Object.entries(this.options.HTMLAttributes || {}).forEach(([key, value]) => {
+        listItem.setAttribute(key, value)
+      })
+
+      listItem.dataset.checked = node.attrs.checked
+      checkbox.checked = Boolean(node.attrs.checked)
+
+      checkboxWrapper.append(checkbox, checkboxStyler)
+      listItem.append(checkboxWrapper, content)
+
+      Object.entries(HTMLAttributes || {}).forEach(([key, value]) => {
+        listItem.setAttribute(key, value)
+      })
+
+      return {
+        dom: listItem,
+        contentDOM: content,
+        update: (updatedNode) => {
+          if (updatedNode.type !== this.type) {
+            return false
+          }
+          listItem.dataset.checked = updatedNode.attrs.checked
+          checkbox.checked = Boolean(updatedNode.attrs.checked)
+          return true
+        },
+      }
+    }
+  },
+})
 
 const CustomHighlight = Highlight.extend({
   addKeyboardShortcuts() {
@@ -43,6 +187,26 @@ const CustomHighlight = Highlight.extend({
       'Mod-Shift-F': () => this.editor.commands.toggleHighlight({ color: '#fed7aa' }),
       'Mod-Shift-e': () => this.editor.commands.toggleHighlight({ color: '#e9d5ff' }),
       'Mod-Shift-E': () => this.editor.commands.toggleHighlight({ color: '#e9d5ff' }),
+      'Mod-Shift-u': ({ editor }) => {
+        transformSelectionCase(editor, 'toggle')
+        return true
+      },
+      'Mod-Shift-U': ({ editor }) => {
+        transformSelectionCase(editor, 'toggle')
+        return true
+      },
+      'Mod-Shift-c': ({ editor }) => {
+        transformSelectionCase(editor, 'toggle')
+        return true
+      },
+      'Mod-Shift-C': ({ editor }) => {
+        transformSelectionCase(editor, 'toggle')
+        return true
+      },
+      'Shift-F3': ({ editor }) => {
+        transformSelectionCase(editor, 'toggle')
+        return true
+      },
       'Shift-Home': ({ editor }) => {
         const sel = window.getSelection()
         if (sel && sel.rangeCount > 0) {
@@ -117,8 +281,17 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
   const [isSaving, setIsSaving] = useState(false)
   const [showHighlightMenu, setShowHighlightMenu] = useState(false)
   const highlightMenuRef = useRef(null)
+  const [showCaseMenu, setShowCaseMenu] = useState(false)
+  const caseMenuRef = useRef(null)
   const saveTimeoutRef = useRef(null)
   const titleTextareaRef = useRef(null)
+
+  // In-Note Word Search State
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [matches, setMatches] = useState([])
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(0)
+  const searchInputRef = useRef(null)
 
   const adjustTitleHeight = useCallback(() => {
     const textarea = titleTextareaRef.current
@@ -141,7 +314,7 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
         placeholder: 'Start writing your note...',
       }),
       TaskList,
-      TaskItem.configure({
+      CustomTaskItem.configure({
         nested: true,
       }),
       CustomHighlight.configure({
@@ -150,8 +323,8 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
       MathCalculationExtension,
     ],
     content: note?.content || '',
-    onUpdate: ({ editor }) => {
-      debouncedSave(title, editor.getJSON(), color, categoryId, isPinned)
+    onUpdate: ({ editor: currentEditor }) => {
+      debouncedSave(title, currentEditor.getJSON(), color, categoryId, isPinned)
     },
   })
 
@@ -230,7 +403,167 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
     }
   }
 
-  // Close highlight popover on click outside
+  // One button to remove all checklists from the note
+  const handleRemoveAllChecklists = useCallback(() => {
+    if (!editor) return
+    const json = editor.getJSON()
+
+    function transformNode(node) {
+      if (!node) return node
+      if (node.type === 'taskList') {
+        const paragraphs = []
+        if (Array.isArray(node.content)) {
+          for (const item of node.content) {
+            if (item.type === 'taskItem') {
+              if (Array.isArray(item.content)) {
+                for (const p of item.content) {
+                  paragraphs.push(transformNode(p))
+                }
+              }
+            } else {
+              paragraphs.push(transformNode(item))
+            }
+          }
+        }
+        return paragraphs
+      }
+      if (node.type === 'taskItem') {
+        return node.content ? node.content.map(transformNode) : []
+      }
+      if (Array.isArray(node.content)) {
+        const newContent = []
+        for (const child of node.content) {
+          const res = transformNode(child)
+          if (Array.isArray(res)) {
+            newContent.push(...res)
+          } else if (res) {
+            newContent.push(res)
+          }
+        }
+        node.content = newContent
+      }
+      return node
+    }
+
+    const transformed = transformNode(JSON.parse(JSON.stringify(json)))
+    editor.commands.setContent(transformed)
+    debouncedSave(title, editor.getJSON(), color, categoryId, isPinned)
+  }, [editor, title, color, categoryId, isPinned, debouncedSave])
+
+  // In-Note Search / Word Finder logic
+  const highlightMatch = useCallback((match) => {
+    if (!editor || !match) return
+    const { state, view } = editor
+    const tr = state.tr.setSelection(
+      TextSelection.create(state.doc, match.from, match.to)
+    ).scrollIntoView()
+    view.dispatch(tr)
+  }, [editor])
+
+  const updateMatches = useCallback((query) => {
+    if (!editor || !query || !query.trim()) {
+      setMatches([])
+      setCurrentMatchIndex(0)
+      return
+    }
+    const q = query.trim().toLowerCase()
+    const foundMatches = []
+    editor.state.doc.descendants((node, pos) => {
+      if (node.isText && node.text) {
+        const text = node.text
+        const textLower = text.toLowerCase()
+        let index = 0
+        while ((index = textLower.indexOf(q, index)) !== -1) {
+          foundMatches.push({
+            from: pos + index,
+            to: pos + index + q.length,
+            text: text.slice(index, index + q.length),
+          })
+          index += q.length
+        }
+      }
+    })
+    setMatches(foundMatches)
+    if (foundMatches.length > 0) {
+      setCurrentMatchIndex(0)
+      highlightMatch(foundMatches[0])
+    } else {
+      setCurrentMatchIndex(0)
+    }
+  }, [editor, highlightMatch])
+
+  const handleSearchChange = (e) => {
+    const q = e.target.value
+    setSearchQuery(q)
+    updateMatches(q)
+  }
+
+  const goToNextMatch = useCallback(() => {
+    if (matches.length === 0) return
+    const nextIdx = (currentMatchIndex + 1) % matches.length
+    setCurrentMatchIndex(nextIdx)
+    highlightMatch(matches[nextIdx])
+  }, [matches, currentMatchIndex, highlightMatch])
+
+  const goToPrevMatch = useCallback(() => {
+    if (matches.length === 0) return
+    const prevIdx = (currentMatchIndex - 1 + matches.length) % matches.length
+    setCurrentMatchIndex(prevIdx)
+    highlightMatch(matches[prevIdx])
+  }, [matches, currentMatchIndex, highlightMatch])
+
+  const openSearch = useCallback(() => {
+    setIsSearchOpen(true)
+    setTimeout(() => {
+      if (searchInputRef.current) {
+        searchInputRef.current.focus()
+        searchInputRef.current.select()
+      }
+    }, 50)
+  }, [])
+
+  const closeSearch = useCallback(() => {
+    setIsSearchOpen(false)
+    setSearchQuery('')
+    setMatches([])
+    if (editor) {
+      editor.commands.focus()
+    }
+  }, [editor])
+
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      if (e.shiftKey) {
+        goToPrevMatch()
+      } else {
+        goToNextMatch()
+      }
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      closeSearch()
+    }
+  }
+
+  // Intercept Cmd+F / Ctrl+F inside NoteEditor
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'f' || e.key === 'F')) {
+        if (!e.shiftKey && !e.altKey) {
+          e.preventDefault()
+          e.stopPropagation()
+          openSearch()
+        }
+      } else if (e.key === 'Escape' && isSearchOpen) {
+        e.preventDefault()
+        closeSearch()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown, true)
+    return () => window.removeEventListener('keydown', handleKeyDown, true)
+  }, [isSearchOpen, openSearch, closeSearch])
+
+  // Close highlight popover on click outside (support mousedown & touchstart)
   useEffect(() => {
     if (!showHighlightMenu) return
     function handleClickOutside(event) {
@@ -239,8 +572,28 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    document.addEventListener('touchstart', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+    }
   }, [showHighlightMenu])
+
+  // Close case menu popover on click outside
+  useEffect(() => {
+    if (!showCaseMenu) return
+    function handleClickOutside(event) {
+      if (caseMenuRef.current && !caseMenuRef.current.contains(event.target)) {
+        setShowCaseMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('touchstart', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+    }
+  }, [showCaseMenu])
 
   useEffect(() => {
     return () => {
@@ -296,6 +649,20 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
             <span className={`save-indicator ${isSaving ? 'save-indicator--saving' : ''}`}>
               {isSaving ? 'Saving...' : 'Saved'}
             </span>
+
+            {/* Find in note shortcut button */}
+            <button
+              type="button"
+              className={`editor-find-toggle-btn ${isSearchOpen ? 'editor-find-toggle-btn--active' : ''}`}
+              onClick={openSearch}
+              title="Find in note (Cmd+F)"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <span>Find</span>
+            </button>
 
             {(isPinned || canPinMore) && (
               <button
@@ -362,6 +729,40 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
 
             {isActionsMenuOpen && (
               <div className="editor-actions-menu">
+                <button
+                  type="button"
+                  className="editor-actions-menu__item"
+                  onClick={() => {
+                    setIsActionsMenuOpen(false)
+                    openSearch()
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  <span>Find in Note (Cmd+F)</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="editor-actions-menu__item"
+                  onClick={() => {
+                    setIsActionsMenuOpen(false)
+                    handleRemoveAllChecklists()
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 11l3 3L22 4" />
+                    <line x1="4" y1="6" x2="10" y2="6" />
+                    <line x1="4" y1="12" x2="7" y2="12" />
+                    <line x1="4" y1="18" x2="10" y2="18" />
+                    <line x1="17" y1="19" x2="22" y2="14" stroke="#ef4444" strokeWidth="2.5" />
+                    <line x1="22" y1="19" x2="17" y2="14" stroke="#ef4444" strokeWidth="2.5" />
+                  </svg>
+                  <span>Remove All Checklists</span>
+                </button>
+
                 {(isPinned || canPinMore) && (
                   <button
                     type="button"
@@ -421,6 +822,67 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
           </div>
         </div>
 
+        {/* In-Note Find / Search Bar */}
+        {isSearchOpen && (
+          <div className="editor-find-bar">
+            <div className="editor-find-bar__container">
+              <svg className="editor-find-bar__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input
+                ref={searchInputRef}
+                type="text"
+                className="editor-find-bar__input"
+                placeholder="Find in note... (Enter / Shift+Enter)"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                onKeyDown={handleSearchKeyDown}
+              />
+              {searchQuery && (
+                <span className="editor-find-bar__count">
+                  {matches.length > 0 ? `${currentMatchIndex + 1} of ${matches.length}` : '0 of 0'}
+                </span>
+              )}
+              <div className="editor-find-bar__nav">
+                <button
+                  type="button"
+                  className="editor-find-bar__btn"
+                  onClick={goToPrevMatch}
+                  disabled={matches.length === 0}
+                  title="Previous match (Shift+Enter)"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="18 15 12 9 6 15" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  className="editor-find-bar__btn"
+                  onClick={goToNextMatch}
+                  disabled={matches.length === 0}
+                  title="Next match (Enter)"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  className="editor-find-bar__btn editor-find-bar__btn--close"
+                  onClick={closeSearch}
+                  title="Close (Esc)"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="editor-toolbar">
           <div className="editor-toolbar__row editor-toolbar__row--formatting">
           <ToolbarButton
@@ -445,6 +907,71 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
             <s>S</s>
           </ToolbarButton>
 
+          {/* Case Transform (Capitalize to normal and vice versa) */}
+          <div className="toolbar-dropdown-wrapper" ref={caseMenuRef}>
+            <ToolbarButton
+              onClick={() => setShowCaseMenu((prev) => !prev)}
+              title="Change Case (Capitalize / UPPER / lower) (Cmd+Shift+U)"
+            >
+              <span className="case-icon-mark">
+                <strong>Aa</strong>
+              </span>
+            </ToolbarButton>
+
+            {showCaseMenu && (
+              <div className="case-dropdown-menu" role="menu">
+                <button
+                  type="button"
+                  className="case-dropdown-item"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    transformSelectionCase(editor, 'capitalize')
+                    setShowCaseMenu(false)
+                  }}
+                >
+                  <strong>Aa</strong>
+                  <span>Capitalize Each Word</span>
+                </button>
+                <button
+                  type="button"
+                  className="case-dropdown-item"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    transformSelectionCase(editor, 'uppercase')
+                    setShowCaseMenu(false)
+                  }}
+                >
+                  <strong>AA</strong>
+                  <span>UPPERCASE</span>
+                </button>
+                <button
+                  type="button"
+                  className="case-dropdown-item"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    transformSelectionCase(editor, 'lowercase')
+                    setShowCaseMenu(false)
+                  }}
+                >
+                  <strong>aa</strong>
+                  <span>lowercase (normal)</span>
+                </button>
+                <button
+                  type="button"
+                  className="case-dropdown-item"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    transformSelectionCase(editor, 'sentence')
+                    setShowCaseMenu(false)
+                  }}
+                >
+                  <strong>A...</strong>
+                  <span>Sentence case</span>
+                </button>
+              </div>
+            )}
+          </div>
+
           {/* Highlight Tool with Multi-color Dropdown */}
           <div className="toolbar-dropdown-wrapper" ref={highlightMenuRef}>
             <ToolbarButton
@@ -461,20 +988,36 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
             </ToolbarButton>
 
             {showHighlightMenu && (
-              <div className="highlight-color-picker">
+              <div className="highlight-color-picker" role="menu">
                 {HIGHLIGHT_COLORS.map((c) => (
                   <button
                     key={c.name}
                     type="button"
                     className="highlight-color-option"
                     style={{ backgroundColor: c.color }}
+                    onMouseDown={(e) => e.preventDefault()}
                     onClick={() => {
                       editor.chain().focus().toggleHighlight({ color: c.color }).run()
                       setShowHighlightMenu(false)
                     }}
-                    title={c.name}
+                    title={`Highlight ${c.name}`}
                   />
                 ))}
+                <button
+                  type="button"
+                  className="highlight-color-option highlight-color-option--clear"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    editor.chain().focus().unsetHighlight().run()
+                    setShowHighlightMenu(false)
+                  }}
+                  title="Remove Highlight"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
               </div>
             )}
           </div>
@@ -517,6 +1060,22 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
               <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
             </svg>
           </ToolbarButton>
+
+          {/* One button to remove all checklists from the note */}
+          <ToolbarButton
+            onClick={handleRemoveAllChecklists}
+            title="Remove all checklists from note"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 11l3 3L22 4" />
+              <line x1="4" y1="6" x2="10" y2="6" strokeWidth="2.5" />
+              <line x1="4" y1="12" x2="7" y2="12" strokeWidth="2.5" />
+              <line x1="4" y1="18" x2="10" y2="18" strokeWidth="2.5" />
+              <line x1="17" y1="19" x2="22" y2="14" stroke="#ef4444" strokeWidth="2.5" />
+              <line x1="22" y1="19" x2="17" y2="14" stroke="#ef4444" strokeWidth="2.5" />
+            </svg>
+          </ToolbarButton>
+
           <ToolbarButton
             onClick={() => editor.chain().focus().toggleBulletList().run()}
             isActive={editor.isActive('bulletList')}

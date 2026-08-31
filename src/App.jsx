@@ -51,6 +51,24 @@ function App() {
     }
   }
 
+  // Focus dashboard search when Cmd+F / Ctrl+F is pressed on dashboard
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'f' || e.key === 'F')) {
+        if (!e.shiftKey && !e.altKey && view === 'dashboard') {
+          e.preventDefault()
+          const searchInput = document.querySelector('.search-input')
+          if (searchInput) {
+            searchInput.focus()
+            searchInput.select()
+          }
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [view])
+
   // Check auth session on mount
   useEffect(() => {
     checkAuth()
