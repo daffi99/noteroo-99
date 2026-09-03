@@ -292,6 +292,8 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
   const [searchQuery, setSearchQuery] = useState('')
   const [matches, setMatches] = useState([])
   const [currentMatchIndex, setCurrentMatchIndex] = useState(0)
+  const [matchCase, setMatchCase] = useState(false)
+  const [wholeWord, setWholeWord] = useState(false)
   const searchInputRef = useRef(null)
 
   const adjustTitleHeight = useCallback(() => {
@@ -439,40 +441,66 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
     })
   }, [editor])
 
-  const updateMatches = useCallback((query, targetIndex = 0) => {
-    if (!editor || !editor.view) return
-    const q = query.trim()
-    if (!q) {
-      setMatches([])
-      setCurrentMatchIndex(0)
+  const updateMatches = useCallback(
+    (query, targetIndex = 0, options = {}) => {
+      if (!editor || !editor.view) return
+      const q = query.trim()
+      const useCase = options.matchCase !== undefined ? options.matchCase : matchCase
+      const useWhole = options.wholeWord !== undefined ? options.wholeWord : wholeWord
+
+      if (!q) {
+        setMatches([])
+        setCurrentMatchIndex(0)
+        const tr = editor.state.tr.setMeta(searchPluginKey, {
+          query: '',
+          activeIndex: 0,
+          matches: [],
+          matchCase: useCase,
+          wholeWord: useWhole,
+        })
+        editor.view.dispatch(tr)
+        return
+      }
+
+      const foundMatches = findMatchesInDoc(editor.state.doc, q, {
+        matchCase: useCase,
+        wholeWord: useWhole,
+      })
+      setMatches(foundMatches)
+
+      const nextIndex =
+        foundMatches.length > 0
+          ? Math.max(0, Math.min(targetIndex, foundMatches.length - 1))
+          : 0
+      setCurrentMatchIndex(nextIndex)
+
       const tr = editor.state.tr.setMeta(searchPluginKey, {
-        query: '',
-        activeIndex: 0,
-        matches: [],
+        query: q,
+        activeIndex: nextIndex,
+        matches: foundMatches,
+        matchCase: useCase,
+        wholeWord: useWhole,
       })
       editor.view.dispatch(tr)
-      return
-    }
 
-    const foundMatches = findMatchesInDoc(editor.state.doc, q, false)
-    setMatches(foundMatches)
+      if (foundMatches.length > 0) {
+        scrollToActiveMatch()
+      }
+    },
+    [editor, matchCase, wholeWord, scrollToActiveMatch]
+  )
 
-    const nextIndex = foundMatches.length > 0
-      ? Math.max(0, Math.min(targetIndex, foundMatches.length - 1))
-      : 0
-    setCurrentMatchIndex(nextIndex)
+  const toggleMatchCase = useCallback(() => {
+    const nextVal = !matchCase
+    setMatchCase(nextVal)
+    updateMatches(searchQuery, 0, { matchCase: nextVal })
+  }, [matchCase, searchQuery, updateMatches])
 
-    const tr = editor.state.tr.setMeta(searchPluginKey, {
-      query: q,
-      activeIndex: nextIndex,
-      matches: foundMatches,
-    })
-    editor.view.dispatch(tr)
-
-    if (foundMatches.length > 0) {
-      scrollToActiveMatch()
-    }
-  }, [editor, scrollToActiveMatch])
+  const toggleWholeWord = useCallback(() => {
+    const nextVal = !wholeWord
+    setWholeWord(nextVal)
+    updateMatches(searchQuery, 0, { wholeWord: nextVal })
+  }, [wholeWord, searchQuery, updateMatches])
 
   const handleSearchChange = (e) => {
     const q = e.target.value
@@ -822,60 +850,80 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
         {/* In-Note Find / Search Bar */}
         {isSearchOpen && (
           <div className="editor-find-bar">
-            <div className="editor-find-bar__container">
-              <svg className="editor-find-bar__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              <input
-                ref={searchInputRef}
-                type="text"
-                className="editor-find-bar__input"
-                placeholder="Find in note... (Enter / Shift+Enter)"
-                value={searchQuery}
-                onChange={handleSearchChange}
-                onKeyDown={handleSearchKeyDown}
-              />
-              {searchQuery && (
-                <span className="editor-find-bar__count">
-                  {matches.length > 0 ? `${currentMatchIndex + 1} of ${matches.length}` : '0 of 0'}
-                </span>
-              )}
-              <div className="editor-find-bar__nav">
-                <button
-                  type="button"
-                  className="editor-find-bar__btn"
-                  onClick={goToPrevMatch}
-                  disabled={matches.length === 0}
-                  title="Previous match (Shift+Enter)"
-                >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="18 15 12 9 6 15" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  className="editor-find-bar__btn"
-                  onClick={goToNextMatch}
-                  disabled={matches.length === 0}
-                  title="Next match (Enter)"
-                >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  className="editor-find-bar__btn editor-find-bar__btn--close"
-                  onClick={closeSearch}
-                  title="Close (Esc)"
-                >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                </button>
-              </div>
+            <svg className="editor-find-bar__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              ref={searchInputRef}
+              type="text"
+              className="editor-find-bar__input"
+              placeholder="Find in note... (Enter / Shift+Enter)"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              onKeyDown={handleSearchKeyDown}
+            />
+            {searchQuery && (
+              <span className="editor-find-bar__count">
+                {matches.length > 0 ? `${currentMatchIndex + 1} of ${matches.length}` : '0 of 0'}
+              </span>
+            )}
+
+            <div className="editor-find-bar__toggles">
+              <button
+                type="button"
+                className={`editor-find-bar__toggle ${matchCase ? 'editor-find-bar__toggle--active' : ''}`}
+                onClick={toggleMatchCase}
+                title="Match Case (Aa)"
+              >
+                Aa
+              </button>
+              <button
+                type="button"
+                className={`editor-find-bar__toggle ${wholeWord ? 'editor-find-bar__toggle--active' : ''}`}
+                onClick={toggleWholeWord}
+                title="Match Whole Word (\b)"
+              >
+                \b
+              </button>
+            </div>
+
+            <div className="editor-find-bar__divider" />
+
+            <div className="editor-find-bar__nav">
+              <button
+                type="button"
+                className="editor-find-bar__btn"
+                onClick={goToPrevMatch}
+                disabled={matches.length === 0}
+                title="Previous match (Shift+Enter)"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="18 15 12 9 6 15" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                className="editor-find-bar__btn"
+                onClick={goToNextMatch}
+                disabled={matches.length === 0}
+                title="Next match (Enter)"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                className="editor-find-bar__btn editor-find-bar__btn--close"
+                onClick={closeSearch}
+                title="Close (Esc)"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
             </div>
           </div>
         )}

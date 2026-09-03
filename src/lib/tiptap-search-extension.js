@@ -7,12 +7,19 @@ export const searchPluginKey = new PluginKey('searchHighlightPlugin')
 /**
  * Finds all occurrences of query in a ProseMirror document
  */
-export function findMatchesInDoc(doc, query, matchCase = false) {
+export function findMatchesInDoc(doc, query, { matchCase = false, wholeWord = false } = {}) {
   if (!query || typeof query !== 'string' || !query.trim()) return []
   const cleanQuery = query.trim()
   const escaped = cleanQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const pattern = wholeWord ? `\\b${escaped}\\b` : escaped
   const flags = matchCase ? 'g' : 'gi'
-  const regex = new RegExp(escaped, flags)
+
+  let regex
+  try {
+    regex = new RegExp(pattern, flags)
+  } catch {
+    return []
+  }
 
   const matches = []
   doc.descendants((node, pos) => {
@@ -40,7 +47,13 @@ export const SearchHighlightExtension = Extension.create({
         key: searchPluginKey,
         state: {
           init() {
-            return { query: '', activeIndex: 0, matches: [], matchCase: false }
+            return {
+              query: '',
+              activeIndex: 0,
+              matches: [],
+              matchCase: false,
+              wholeWord: false,
+            }
           },
           apply(tr, prev) {
             const meta = tr.getMeta(searchPluginKey)
@@ -48,7 +61,10 @@ export const SearchHighlightExtension = Extension.create({
               return { ...prev, ...meta }
             }
             if (tr.docChanged && prev.query) {
-              const matches = findMatchesInDoc(tr.doc, prev.query, prev.matchCase)
+              const matches = findMatchesInDoc(tr.doc, prev.query, {
+                matchCase: prev.matchCase,
+                wholeWord: prev.wholeWord,
+              })
               return {
                 ...prev,
                 matches,
