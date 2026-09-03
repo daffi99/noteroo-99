@@ -273,6 +273,47 @@ function App() {
     }
   }
 
+  const handleResetCheckmarks = async (note) => {
+    if (!note?.content) return
+    try {
+      const json = typeof note.content === 'string' ? JSON.parse(note.content) : JSON.parse(JSON.stringify(note.content))
+      let count = 0
+      function traverse(node) {
+        if (!node) return
+        if (node.type === 'taskItem' && node.attrs?.checked) {
+          node.attrs.checked = false
+          count++
+        }
+        if (Array.isArray(node.content)) {
+          node.content.forEach(traverse)
+        }
+      }
+      traverse(json)
+
+      if (count > 0) {
+        const saved = await api.updateNote(note.id, {
+          title: note.title,
+          content: json,
+          color: note.color,
+          category_id: note.category_id,
+          is_pinned: note.is_pinned,
+        })
+        setNotes((prev) =>
+          sortNotes(prev.map((n) => (n.id === saved.id ? saved : n)))
+        )
+        if (activeNote && activeNote.id === saved.id) {
+          setActiveNote(saved)
+        }
+        setToast({ message: `Reset ${count} checkmark${count > 1 ? 's' : ''} to not yet`, type: 'info' })
+      } else {
+        setToast({ message: 'All checkmarks are already not yet (unchecked)', type: 'info' })
+      }
+    } catch (err) {
+      console.error('Error resetting checkmarks:', err)
+      setToast({ message: 'Failed to reset checkmarks', type: 'warning' })
+    }
+  }
+
   const [noteToDelete, setNoteToDelete] = useState(null)
   const [isDeletingNote, setIsDeletingNote] = useState(false)
 
@@ -414,6 +455,7 @@ function App() {
                 onTogglePin={handleTogglePinNote}
                 onDeleteNote={handleRequestDelete}
                 onChangeColor={handleChangeNoteColor}
+                onResetCheckmarks={handleResetCheckmarks}
                 searchQuery={searchQuery}
                 onManageCategories={() => setView('categories')}
               />

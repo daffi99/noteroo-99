@@ -31,6 +31,7 @@ export default function NoteGrid({
   onTogglePin,
   onDeleteNote,
   onChangeColor,
+  onResetCheckmarks,
 }) {
   const safeNotes = Array.isArray(notes) ? notes : []
   const safeCategories = Array.isArray(categories) ? categories : []
@@ -135,6 +136,7 @@ export default function NoteGrid({
               onTogglePin={onTogglePin}
               onDeleteNote={onDeleteNote}
               onChangeColor={onChangeColor}
+              onResetCheckmarks={onResetCheckmarks}
               canPinMore={canPinMore}
               style={{ animationDelay: `${index * 0.05}s` }}
             />

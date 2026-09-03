@@ -403,51 +403,27 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
     }
   }
 
-  // One button to remove all checklists from the note
-  const handleRemoveAllChecklists = useCallback(() => {
-    if (!editor) return
-    const json = editor.getJSON()
+  // Reset all checkmarks from done to not yet (uncheck all items)
+  const handleResetAllCheckmarks = useCallback(() => {
+    if (!editor || !editor.view) return
+    const { state, dispatch } = editor.view
+    const tr = state.tr
+    let count = 0
 
-    function transformNode(node) {
-      if (!node) return node
-      if (node.type === 'taskList') {
-        const paragraphs = []
-        if (Array.isArray(node.content)) {
-          for (const item of node.content) {
-            if (item.type === 'taskItem') {
-              if (Array.isArray(item.content)) {
-                for (const p of item.content) {
-                  paragraphs.push(transformNode(p))
-                }
-              }
-            } else {
-              paragraphs.push(transformNode(item))
-            }
-          }
-        }
-        return paragraphs
+    state.doc.descendants((node, pos) => {
+      if (node.type.name === 'taskItem' && node.attrs.checked) {
+        tr.setNodeMarkup(pos, undefined, {
+          ...node.attrs,
+          checked: false,
+        })
+        count++
       }
-      if (node.type === 'taskItem') {
-        return node.content ? node.content.map(transformNode) : []
-      }
-      if (Array.isArray(node.content)) {
-        const newContent = []
-        for (const child of node.content) {
-          const res = transformNode(child)
-          if (Array.isArray(res)) {
-            newContent.push(...res)
-          } else if (res) {
-            newContent.push(res)
-          }
-        }
-        node.content = newContent
-      }
-      return node
+    })
+
+    if (count > 0) {
+      dispatch(tr)
+      debouncedSave(title, editor.getJSON(), color, categoryId, isPinned)
     }
-
-    const transformed = transformNode(JSON.parse(JSON.stringify(json)))
-    editor.commands.setContent(transformed)
-    debouncedSave(title, editor.getJSON(), color, categoryId, isPinned)
   }, [editor, title, color, categoryId, isPinned, debouncedSave])
 
   // In-Note Search / Word Finder logic
@@ -749,18 +725,15 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
                   className="editor-actions-menu__item"
                   onClick={() => {
                     setIsActionsMenuOpen(false)
-                    handleRemoveAllChecklists()
+                    handleResetAllCheckmarks()
                   }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M9 11l3 3L22 4" />
-                    <line x1="4" y1="6" x2="10" y2="6" />
-                    <line x1="4" y1="12" x2="7" y2="12" />
-                    <line x1="4" y1="18" x2="10" y2="18" />
-                    <line x1="17" y1="19" x2="22" y2="14" stroke="#ef4444" strokeWidth="2.5" />
-                    <line x1="22" y1="19" x2="17" y2="14" stroke="#ef4444" strokeWidth="2.5" />
+                    <rect x="3" y="3" width="18" height="18" rx="3" />
+                    <path d="M8 12l2.5 2.5L16 9" opacity="0.4" />
+                    <line x1="3" y1="21" x2="21" y2="3" stroke="#ef4444" strokeWidth="2" />
                   </svg>
-                  <span>Remove All Checklists</span>
+                  <span>Reset Checkmarks (Done → Not Yet)</span>
                 </button>
 
                 {(isPinned || canPinMore) && (
@@ -1061,18 +1034,15 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
             </svg>
           </ToolbarButton>
 
-          {/* One button to remove all checklists from the note */}
+          {/* Button to reset all checkmarks from done to not yet (uncheck all) */}
           <ToolbarButton
-            onClick={handleRemoveAllChecklists}
-            title="Remove all checklists from note"
+            onClick={handleResetAllCheckmarks}
+            title="Reset checkmarks (Done → Not Yet)"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 11l3 3L22 4" />
-              <line x1="4" y1="6" x2="10" y2="6" strokeWidth="2.5" />
-              <line x1="4" y1="12" x2="7" y2="12" strokeWidth="2.5" />
-              <line x1="4" y1="18" x2="10" y2="18" strokeWidth="2.5" />
-              <line x1="17" y1="19" x2="22" y2="14" stroke="#ef4444" strokeWidth="2.5" />
-              <line x1="22" y1="19" x2="17" y2="14" stroke="#ef4444" strokeWidth="2.5" />
+              <rect x="3" y="3" width="18" height="18" rx="3" />
+              <path d="M8 12l2.5 2.5L16 9" opacity="0.4" />
+              <line x1="3" y1="21" x2="21" y2="3" stroke="#ef4444" strokeWidth="2" />
             </svg>
           </ToolbarButton>
 

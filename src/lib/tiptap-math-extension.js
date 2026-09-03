@@ -126,68 +126,126 @@ export function evaluateMathExpression(exprStr) {
 /**
  * Scopes calculation to ONLY the specific checklist/list group near pos
  */
-function getScopedListSum(doc, pos) {
+export function getScopedListSum(doc, pos) {
   const $pos = doc.resolve(pos)
   const items = []
+
+  const isListNodeType = (node) =>
+    node &&
+    (node.type.name === 'taskList' ||
+      node.type.name === 'bulletList' ||
+      node.type.name === 'orderedList')
+
+  const isTotalLine = (text) => {
+    if (!text) return false
+    return /(?:total|jumlah|subtotal|hasil|^[a-zA-Z\s\d]+)\s*=\s*[\d\.\,]+/i.test(text)
+  }
 
   // 1. Check if pos is inside a taskList / bulletList / orderedList
   let listNode = null
   for (let depth = $pos.depth; depth > 0; depth--) {
     const parent = $pos.node(depth)
-    if (
-      parent.type.name === 'taskList' ||
-      parent.type.name === 'bulletList' ||
-      parent.type.name === 'orderedList'
-    ) {
+    if (isListNodeType(parent)) {
       listNode = parent
       break
     }
   }
 
   if (listNode) {
-    // Collect text only from children of this specific list
+    // Collect text from this list node
     listNode.forEach((child) => {
       if (child.textContent) {
         items.push(child.textContent)
       }
     })
+
+    // Also check adjacent contiguous sibling lists
+    for (let d = $pos.depth; d > 0; d--) {
+      if ($pos.node(d) === listNode) {
+        const parentOfList = $pos.node(d - 1)
+        const indexOfList = $pos.index(d - 1)
+        if (parentOfList) {
+          for (let i = indexOfList + 1; i < parentOfList.childCount; i++) {
+            const sib = parentOfList.child(i)
+            if (isListNodeType(sib)) {
+              sib.forEach((child) => {
+                if (child.textContent) items.push(child.textContent)
+              })
+            } else {
+              break
+            }
+          }
+          for (let i = indexOfList - 1; i >= 0; i--) {
+            const sib = parentOfList.child(i)
+            if (isListNodeType(sib)) {
+              sib.forEach((child) => {
+                if (child.textContent) items.push(child.textContent)
+              })
+            } else {
+              break
+            }
+          }
+        }
+        break
+      }
+    }
   } else {
-    // 2. Check immediately adjacent list node (next or previous sibling)
-    let foundAdjacent = false
+    // 2. pos is outside a list (e.g. in a heading or paragraph like "Shopee Pay later october 25th = ")
     const parentDepth = Math.max(1, $pos.depth)
     const blockIndex = $pos.index(parentDepth - 1)
     const parentNode = $pos.node(parentDepth - 1)
+    let foundAdjacent = false
 
     if (parentNode && parentNode.childCount > 0) {
-      // Check next sibling list
-      if (blockIndex + 1 < parentNode.childCount) {
-        const nextSibling = parentNode.child(blockIndex + 1)
-        if (
-          nextSibling &&
-          (nextSibling.type.name === 'taskList' ||
-            nextSibling.type.name === 'bulletList' ||
-            nextSibling.type.name === 'orderedList')
-        ) {
-          nextSibling.forEach((child) => {
+      // Check all subsequent contiguous lists / items below this block
+      for (let i = blockIndex + 1; i < parentNode.childCount; i++) {
+        const sibling = parentNode.child(i)
+        if (isListNodeType(sibling)) {
+          sibling.forEach((child) => {
             if (child.textContent) items.push(child.textContent)
           })
           foundAdjacent = true
+        } else if (sibling.isTextblock) {
+          const txt = sibling.textContent.trim()
+          if (!txt || isTotalLine(txt)) {
+            break
+          }
+          const parsed = parseNumberFromText(txt)
+          if (parsed) {
+            items.push(txt)
+            foundAdjacent = true
+          } else {
+            break
+          }
+        } else {
+          break
         }
       }
 
-      // Check previous sibling list
+      // Check all preceding contiguous lists / items above this block
       if (!foundAdjacent && blockIndex > 0) {
-        const prevSibling = parentNode.child(blockIndex - 1)
-        if (
-          prevSibling &&
-          (prevSibling.type.name === 'taskList' ||
-            prevSibling.type.name === 'bulletList' ||
-            prevSibling.type.name === 'orderedList')
-        ) {
-          prevSibling.forEach((child) => {
-            if (child.textContent) items.push(child.textContent)
-          })
-          foundAdjacent = true
+        for (let i = blockIndex - 1; i >= 0; i--) {
+          const sibling = parentNode.child(i)
+          if (isListNodeType(sibling)) {
+            sibling.forEach((child) => {
+              if (child.textContent) items.push(child.textContent)
+            })
+            foundAdjacent = true
+          } else if (sibling.isTextblock) {
+            const txt = sibling.textContent.trim()
+            if (!txt || isTotalLine(txt)) {
+              break
+            }
+            const parsed = parseNumberFromText(txt)
+            if (parsed) {
+              items.push(txt)
+              foundAdjacent = true
+            } else {
+              break
+            }
+          } else {
+            break
+          }
         }
       }
     }
@@ -205,16 +263,16 @@ function getScopedListSum(doc, pos) {
         (b) => b.pos <= pos && pos <= b.pos + b.text.length + 4
       )
       if (currIndex !== -1) {
-        // Look backwards until empty line
-        for (let i = currIndex - 1; i >= 0; i--) {
-          const t = allBlocks[i].text.trim()
-          if (!t) break
-          items.push(t)
-        }
-        // Look forwards until empty line
+        // Look forwards
         for (let i = currIndex + 1; i < allBlocks.length; i++) {
           const t = allBlocks[i].text.trim()
-          if (!t) break
+          if (!t || isTotalLine(t)) break
+          items.push(t)
+        }
+        // Look backwards
+        for (let i = currIndex - 1; i >= 0; i--) {
+          const t = allBlocks[i].text.trim()
+          if (!t || isTotalLine(t)) break
           items.push(t)
         }
       }
@@ -251,24 +309,54 @@ export const MathCalculationExtension = Extension.create({
         ({ state, dispatch }) => {
           const { selection } = state
           const { $from } = selection
-          const lineText = $from.parent.textContent
+          const lineText = $from.parent.textContent.trim()
 
-          // 1. Single line math check
+          // Case A: Line already contains "= <number>" e.g. "Shopee Pay later october 25th = 409.000" or "40.000+75.000 = 115.000"
+          const existingEqMatch = lineText.match(/^(.*?)=\s*([\d\.\,]+)\s*$/)
+          if (existingEqMatch) {
+            const prefix = existingEqMatch[1].trim()
+            // Check if prefix has inline math (e.g. "40.000+75.000")
+            const inlineMath = prefix.match(/(?:^|[\/\:\,\s\a-zA-Z])\s*([\d\.]+(?:\s*[\+\-\*\/]\s*[\d\.]+)+)$/)
+            if (inlineMath) {
+              const res = evaluateMathExpression(inlineMath[1].trim())
+              if (res !== null && dispatch) {
+                const formatted = formatNumber(res.value, res.usesDots)
+                const lineStart = $from.start()
+                const lineEnd = $from.end()
+                const tr = state.tr.replaceWith(lineStart, lineEnd, state.schema.text(`${prefix} = ${formatted}`))
+                dispatch(tr)
+                return true
+              }
+            }
+
+            // Otherwise evaluate as scoped list sum
+            const sumData = getScopedListSum(state.doc, $from.pos)
+            if (sumData && dispatch) {
+              const formatted = formatNumber(sumData.total, sumData.preferDots)
+              const lineStart = $from.start()
+              const lineEnd = $from.end()
+              const tr = state.tr.replaceWith(lineStart, lineEnd, state.schema.text(`${prefix} = ${formatted}`))
+              dispatch(tr)
+              return true
+            }
+          }
+
+          // Case B: Single line math without "=" yet (e.g. "40.000+75.000")
           if (lineText) {
-            let exprMatch = lineText.match(/(?:^|[\/\:\,\s\a-zA-Z])\s*([\d\.\+\-\*\/\%\(\)\s x×÷]+)$/)
+            const exprMatch = lineText.match(/(?:^|[\/\:\,\s\a-zA-Z])\s*([\d\.]+(?:\s*[\+\-\*\/]\s*[\d\.]+)+)$/)
             if (exprMatch) {
               const rawExpr = exprMatch[1]
               const res = evaluateMathExpression(rawExpr)
               if (res !== null && dispatch) {
                 const formatted = formatNumber(res.value, res.usesDots)
-                const tr = state.tr.insertText(` = ${formatted} `)
+                const tr = state.tr.insertText(` = ${formatted}`)
                 dispatch(tr)
                 return true
               }
             }
           }
 
-          // 2. Scoped checklist / adjacent items sum check
+          // Case C: Scoped checklist / adjacent items sum check (e.g. "Shopee Pay later october 25th" or "Total")
           const sumData = getScopedListSum(state.doc, $from.pos)
           if (sumData && dispatch) {
             const formatted = formatNumber(sumData.total, sumData.preferDots)
@@ -293,27 +381,48 @@ export const MathCalculationExtension = Extension.create({
           const { doc } = newState
           let tr = null
 
-          // Auto-recalculate any "Total = ..." line when list numbers are updated
+          // Auto-recalculate any calculation line ("Total = ...", "Shopee Pay later... = ...", or inline math)
           doc.descendants((node, pos) => {
             if (node.isText) {
               const text = node.text
-              const totalMatch = text.match(/(.*Total\s*=\s*)([\d\.]+)/i)
+              const totalMatch = text.match(/(.*=\s*)([\d\.]+)/)
               if (totalMatch) {
-                const prefixWithSpace = totalMatch[1]
+                const prefixWithEqual = totalMatch[1]
                 const currentValStr = totalMatch[2]
+                const prefixBeforeEqual = prefixWithEqual.replace(/=\s*$/, '').trim()
 
-                const sumData = getScopedListSum(doc, pos)
-                if (sumData) {
-                  const newFormattedVal = formatNumber(sumData.total, sumData.preferDots)
-                  if (currentValStr !== newFormattedVal) {
-                    if (!tr) tr = newState.tr
-                    const startPos = pos + totalMatch.index + prefixWithSpace.length
-                    const endPos = startPos + currentValStr.length
-                    tr = tr.replaceWith(
-                      startPos,
-                      endPos,
-                      newState.schema.text(newFormattedVal)
-                    )
+                // If prefix has inline math (like "40.000+75.000 = "), evaluate math
+                const inlineMath = prefixBeforeEqual.match(/(?:^|[\/\:\,\s\a-zA-Z])\s*([\d\.]+(?:\s*[\+\-\*\/]\s*[\d\.]+)+)$/)
+                if (inlineMath) {
+                  const res = evaluateMathExpression(inlineMath[1].trim())
+                  if (res !== null) {
+                    const newFormattedVal = formatNumber(res.value, res.usesDots)
+                    if (currentValStr !== newFormattedVal) {
+                      if (!tr) tr = newState.tr
+                      const startPos = pos + totalMatch.index + prefixWithEqual.length
+                      const endPos = startPos + currentValStr.length
+                      tr = tr.replaceWith(
+                        startPos,
+                        endPos,
+                        newState.schema.text(newFormattedVal)
+                      )
+                    }
+                  }
+                } else {
+                  // List total (e.g. "Shopee Pay later october 25th = " or "Total = ")
+                  const sumData = getScopedListSum(doc, pos)
+                  if (sumData) {
+                    const newFormattedVal = formatNumber(sumData.total, sumData.preferDots)
+                    if (currentValStr !== newFormattedVal) {
+                      if (!tr) tr = newState.tr
+                      const startPos = pos + totalMatch.index + prefixWithEqual.length
+                      const endPos = startPos + currentValStr.length
+                      tr = tr.replaceWith(
+                        startPos,
+                        endPos,
+                        newState.schema.text(newFormattedVal)
+                      )
+                    }
                   }
                 }
               }
@@ -331,7 +440,7 @@ export const MathCalculationExtension = Extension.create({
             // 1. If user typed '=' -> Evaluate single-line math or scoped list sum
             if (text === '=') {
               // Try single-line math calculation (e.g. "Peralatan mati lampu / 65.000+53.000+155.000")
-              const mathMatch = textBefore.match(/(?:^|[\/\:\,\s\a-zA-Z])\s*([\d\.\+\-\*\/\%\(\)\s x×÷]+)$/)
+              const mathMatch = textBefore.match(/(?:^|[\/\:\,\s\a-zA-Z])\s*([\d\.]+(?:\s*[\+\-\*\/]\s*[\d\.]+)+)$/)
               if (mathMatch) {
                 const expr = mathMatch[1].trim()
                 const res = evaluateMathExpression(expr)

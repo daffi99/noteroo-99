@@ -10,12 +10,35 @@ const CARD_COLORS = [
   { name: 'yellow', label: 'Yellow', hex: '#FFF176' },
 ]
 
+function hasChecklists(note) {
+  if (!note?.content) return false
+  try {
+    const json = typeof note.content === 'string' ? JSON.parse(note.content) : note.content
+    let found = false
+    function traverse(node) {
+      if (!node || found) return
+      if (node.type === 'taskItem' || node.type === 'taskList') {
+        found = true
+        return
+      }
+      if (Array.isArray(node.content)) {
+        node.content.forEach(traverse)
+      }
+    }
+    traverse(json)
+    return found
+  } catch {
+    return false
+  }
+}
+
 export default function NoteCard({
   note,
   onClick,
   onTogglePin,
   onDeleteNote,
   onChangeColor,
+  onResetCheckmarks,
   canPinMore = true,
   style,
 }) {
@@ -223,6 +246,24 @@ export default function NoteCard({
                     </svg>
                     <span>Edit note</span>
                   </button>
+                  {hasChecklists(note) && onResetCheckmarks && (
+                    <button
+                      type="button"
+                      className="note-card__dropdown-item"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setIsMenuOpen(false)
+                        onResetCheckmarks(note)
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="3" />
+                        <path d="M8 12l2.5 2.5L16 9" opacity="0.4" />
+                        <line x1="3" y1="21" x2="21" y2="3" stroke="#ef4444" strokeWidth="2" />
+                      </svg>
+                      <span>Reset checkmarks</span>
+                    </button>
+                  )}
                   {onDeleteNote && (
                     <button
                       type="button"
