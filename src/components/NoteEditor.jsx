@@ -10,6 +10,7 @@ import { exportNoteToTxt } from '../utils/export'
 import CategoryDropdown from './CategoryDropdown'
 import { MathCalculationExtension } from '../lib/tiptap-math-extension'
 import { SearchHighlightExtension, searchPluginKey, findMatchesInDoc } from '../lib/tiptap-search-extension'
+import { getSavedLayoutMode, setSavedLayoutMode } from '../lib/layout-mode.js'
 
 import { fastTap } from '../lib/fastTap'
 
@@ -294,7 +295,16 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
   const [currentMatchIndex, setCurrentMatchIndex] = useState(0)
   const [matchCase, setMatchCase] = useState(false)
   const [wholeWord, setWholeWord] = useState(false)
+  const [currentLayoutMode, setCurrentLayoutMode] = useState(getSavedLayoutMode())
   const searchInputRef = useRef(null)
+
+  useEffect(() => {
+    const handleLayoutChange = (e) => {
+      setCurrentLayoutMode(e.detail || getSavedLayoutMode())
+    }
+    window.addEventListener('noteroo-layout-change', handleLayoutChange)
+    return () => window.removeEventListener('noteroo-layout-change', handleLayoutChange)
+  }, [])
 
   const adjustTitleHeight = useCallback(() => {
     const textarea = titleTextareaRef.current
@@ -825,6 +835,45 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
                   </svg>
                   <span>Export to TXT</span>
                 </button>
+
+                <div className="editor-actions-menu__divider" />
+
+                <div className="editor-actions-menu__section-header">Device Layout</div>
+                <div className="editor-actions-menu__layout-row">
+                  <button
+                    type="button"
+                    className={`editor-actions-menu__layout-pill ${currentLayoutMode === 'desktop' ? 'editor-actions-menu__layout-pill--active' : ''}`}
+                    onClick={() => {
+                      setSavedLayoutMode('desktop')
+                      setCurrentLayoutMode('desktop')
+                    }}
+                    title="Desktop Layout"
+                  >
+                    Desktop
+                  </button>
+                  <button
+                    type="button"
+                    className={`editor-actions-menu__layout-pill ${currentLayoutMode === 'ipad' ? 'editor-actions-menu__layout-pill--active' : ''}`}
+                    onClick={() => {
+                      setSavedLayoutMode('ipad')
+                      setCurrentLayoutMode('ipad')
+                    }}
+                    title="iPad / Tablet Layout"
+                  >
+                    iPad
+                  </button>
+                  <button
+                    type="button"
+                    className={`editor-actions-menu__layout-pill ${currentLayoutMode === 'pwa' ? 'editor-actions-menu__layout-pill--active' : ''}`}
+                    onClick={() => {
+                      setSavedLayoutMode('pwa')
+                      setCurrentLayoutMode('pwa')
+                    }}
+                    title="PWA Mobile Layout"
+                  >
+                    PWA
+                  </button>
+                </div>
 
                 <div className="editor-actions-menu__divider" />
 

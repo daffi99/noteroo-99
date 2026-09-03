@@ -1,11 +1,18 @@
 import { useState, useRef } from 'react'
+import { getSavedLayoutMode, setSavedLayoutMode } from '../lib/layout-mode.js'
 
 export default function ProfileModal({ isOpen, user, onSaveProfile, onClose }) {
   const [name, setName] = useState(user?.name || '')
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || '')
+  const [layoutMode, setLayoutMode] = useState(getSavedLayoutMode())
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const fileInputRef = useRef(null)
+
+  const handleLayoutModeSelect = (mode) => {
+    setLayoutMode(mode)
+    setSavedLayoutMode(mode)
+  }
 
   if (!isOpen) return null
 
@@ -159,6 +166,57 @@ export default function ProfileModal({ isOpen, user, onSaveProfile, onClose }) {
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
+          </div>
+
+          {/* Device Layout Mode Setting */}
+          <div className="profile-modal__field">
+            <label className="profile-modal__label">
+              Device Layout Mode (This Device)
+            </label>
+            <p className="profile-modal__field-hint">
+              Saved specifically on this device without affecting your other gadgets.
+            </p>
+            <div className="profile-modal__layout-grid">
+              <button
+                type="button"
+                className={`profile-modal__layout-btn ${layoutMode === 'auto' ? 'profile-modal__layout-btn--active' : ''}`}
+                onClick={() => handleLayoutModeSelect('auto')}
+              >
+                <span className="profile-modal__layout-btn-badge">Auto</span>
+                <span className="profile-modal__layout-btn-title">Default</span>
+                <span className="profile-modal__layout-btn-desc">Based on screen width</span>
+              </button>
+
+              <button
+                type="button"
+                className={`profile-modal__layout-btn ${layoutMode === 'desktop' ? 'profile-modal__layout-btn--active' : ''}`}
+                onClick={() => handleLayoutModeSelect('desktop')}
+              >
+                <span className="profile-modal__layout-btn-badge">🖥️</span>
+                <span className="profile-modal__layout-btn-title">Desktop</span>
+                <span className="profile-modal__layout-btn-desc">Category next to Back & full actions</span>
+              </button>
+
+              <button
+                type="button"
+                className={`profile-modal__layout-btn ${layoutMode === 'ipad' ? 'profile-modal__layout-btn--active' : ''}`}
+                onClick={() => handleLayoutModeSelect('ipad')}
+              >
+                <span className="profile-modal__layout-btn-badge">📱</span>
+                <span className="profile-modal__layout-btn-title">iPad / Tablet</span>
+                <span className="profile-modal__layout-btn-desc">Centered Category & 3-dot menu</span>
+              </button>
+
+              <button
+                type="button"
+                className={`profile-modal__layout-btn ${layoutMode === 'pwa' ? 'profile-modal__layout-btn--active' : ''}`}
+                onClick={() => handleLayoutModeSelect('pwa')}
+              >
+                <span className="profile-modal__layout-btn-badge">📲</span>
+                <span className="profile-modal__layout-btn-title">PWA / Mobile</span>
+                <span className="profile-modal__layout-btn-desc">Compact mobile layout</span>
+              </button>
+            </div>
           </div>
 
           <div className="profile-modal__actions">
