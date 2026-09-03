@@ -2515,6 +2515,37 @@ ul[data-type="taskList"] li[data-checked="true"] > div,
   color: #ef4444;
 }
 
+/* In-Note Search Visual Highlights (Safari / Chrome native find style) */
+.search-result-match {
+  background-color: #fef08a !important; /* Soft bright yellow for all matches */
+  color: #1c1917 !important;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(202, 138, 4, 0.4);
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.search-result-match--active {
+  background-color: #f59e0b !important; /* Vibrant orange/amber for current match */
+  color: #000000 !important;
+  border-radius: 3px;
+  box-shadow: 0 0 0 2px #d97706, 0 0 10px rgba(245, 158, 11, 0.7) !important;
+  font-weight: 700;
+  outline: none;
+}
+
+[data-theme="dark"] .search-result-match {
+  background-color: #854d0e !important;
+  color: #fef08a !important;
+  box-shadow: 0 0 0 1px rgba(254, 240, 138, 0.3);
+}
+
+[data-theme="dark"] .search-result-match--active {
+  background-color: #fbbf24 !important;
+  color: #1c1917 !important;
+  box-shadow: 0 0 0 2px #f59e0b, 0 0 12px rgba(251, 191, 36, 0.8) !important;
+  font-weight: 700;
+}
+
 /* ========== CASE TRANSFORM DROPDOWN STYLES ========== */
 .case-icon-mark {
   display: flex;

@@ -9,6 +9,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { exportNoteToTxt } from '../utils/export'
 import CategoryDropdown from './CategoryDropdown'
 import { MathCalculationExtension } from '../lib/tiptap-math-extension'
+import { SearchHighlightExtension, searchPluginKey, findMatchesInDoc } from '../lib/tiptap-search-extension'
 
 import { fastTap } from '../lib/fastTap'
 
@@ -321,6 +322,7 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
         multicolor: true,
       }),
       MathCalculationExtension,
+      SearchHighlightExtension,
     ],
     content: note?.content || '',
     onUpdate: ({ editor: currentEditor }) => {
@@ -426,67 +428,79 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
     }
   }, [editor, title, color, categoryId, isPinned, debouncedSave])
 
-  // In-Note Search / Word Finder logic
-  const highlightMatch = useCallback((match) => {
-    if (!editor || !match) return
-    const { state, view } = editor
-    const tr = state.tr.setSelection(
-      TextSelection.create(state.doc, match.from, match.to)
-    ).scrollIntoView()
-    view.dispatch(tr)
-  }, [editor])
-
-  const updateMatches = useCallback((query) => {
-    if (!editor || !query || !query.trim()) {
-      setMatches([])
-      setCurrentMatchIndex(0)
-      return
-    }
-    const q = query.trim().toLowerCase()
-    const foundMatches = []
-    editor.state.doc.descendants((node, pos) => {
-      if (node.isText && node.text) {
-        const text = node.text
-        const textLower = text.toLowerCase()
-        let index = 0
-        while ((index = textLower.indexOf(q, index)) !== -1) {
-          foundMatches.push({
-            from: pos + index,
-            to: pos + index + q.length,
-            text: text.slice(index, index + q.length),
-          })
-          index += q.length
-        }
+  // In-Note Search / Word Finder logic with visual highlights (Safari / Chrome native find style)
+  const scrollToActiveMatch = useCallback(() => {
+    requestAnimationFrame(() => {
+      if (!editor || !editor.view) return
+      const activeEl = editor.view.dom.querySelector('.search-result-match--active')
+      if (activeEl) {
+        activeEl.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
       }
     })
-    setMatches(foundMatches)
-    if (foundMatches.length > 0) {
+  }, [editor])
+
+  const updateMatches = useCallback((query, targetIndex = 0) => {
+    if (!editor || !editor.view) return
+    const q = query.trim()
+    if (!q) {
+      setMatches([])
       setCurrentMatchIndex(0)
-      highlightMatch(foundMatches[0])
-    } else {
-      setCurrentMatchIndex(0)
+      const tr = editor.state.tr.setMeta(searchPluginKey, {
+        query: '',
+        activeIndex: 0,
+        matches: [],
+      })
+      editor.view.dispatch(tr)
+      return
     }
-  }, [editor, highlightMatch])
+
+    const foundMatches = findMatchesInDoc(editor.state.doc, q, false)
+    setMatches(foundMatches)
+
+    const nextIndex = foundMatches.length > 0
+      ? Math.max(0, Math.min(targetIndex, foundMatches.length - 1))
+      : 0
+    setCurrentMatchIndex(nextIndex)
+
+    const tr = editor.state.tr.setMeta(searchPluginKey, {
+      query: q,
+      activeIndex: nextIndex,
+      matches: foundMatches,
+    })
+    editor.view.dispatch(tr)
+
+    if (foundMatches.length > 0) {
+      scrollToActiveMatch()
+    }
+  }, [editor, scrollToActiveMatch])
 
   const handleSearchChange = (e) => {
     const q = e.target.value
     setSearchQuery(q)
-    updateMatches(q)
+    updateMatches(q, 0)
   }
 
   const goToNextMatch = useCallback(() => {
-    if (matches.length === 0) return
+    if (!editor || !editor.view || matches.length === 0) return
     const nextIdx = (currentMatchIndex + 1) % matches.length
     setCurrentMatchIndex(nextIdx)
-    highlightMatch(matches[nextIdx])
-  }, [matches, currentMatchIndex, highlightMatch])
+    const tr = editor.state.tr.setMeta(searchPluginKey, {
+      activeIndex: nextIdx,
+    })
+    editor.view.dispatch(tr)
+    scrollToActiveMatch()
+  }, [editor, matches, currentMatchIndex, scrollToActiveMatch])
 
   const goToPrevMatch = useCallback(() => {
-    if (matches.length === 0) return
+    if (!editor || !editor.view || matches.length === 0) return
     const prevIdx = (currentMatchIndex - 1 + matches.length) % matches.length
     setCurrentMatchIndex(prevIdx)
-    highlightMatch(matches[prevIdx])
-  }, [matches, currentMatchIndex, highlightMatch])
+    const tr = editor.state.tr.setMeta(searchPluginKey, {
+      activeIndex: prevIdx,
+    })
+    editor.view.dispatch(tr)
+    scrollToActiveMatch()
+  }, [editor, matches, currentMatchIndex, scrollToActiveMatch])
 
   const openSearch = useCallback(() => {
     setIsSearchOpen(true)
@@ -496,13 +510,23 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
         searchInputRef.current.select()
       }
     }, 50)
-  }, [])
+    if (searchQuery) {
+      updateMatches(searchQuery, currentMatchIndex)
+    }
+  }, [searchQuery, currentMatchIndex, updateMatches])
 
   const closeSearch = useCallback(() => {
     setIsSearchOpen(false)
     setSearchQuery('')
     setMatches([])
-    if (editor) {
+    setCurrentMatchIndex(0)
+    if (editor && editor.view) {
+      const tr = editor.state.tr.setMeta(searchPluginKey, {
+        query: '',
+        activeIndex: 0,
+        matches: [],
+      })
+      editor.view.dispatch(tr)
       editor.commands.focus()
     }
   }, [editor])
