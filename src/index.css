@@ -843,7 +843,7 @@ textarea,
   position: relative;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
   .editor-topbar {
     justify-content: space-between;
     padding: 0.45rem 0.75rem;
