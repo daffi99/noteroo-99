@@ -299,32 +299,6 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
   const [isCopiedJson, setIsCopiedJson] = useState(false)
   const searchInputRef = useRef(null)
 
-  const handleCopyJson = useCallback(() => {
-    if (!editor) return
-    const jsonStr = formatNoteAsJson({
-      ...note,
-      title,
-      content: editor.getJSON(),
-      color,
-      category_name: categories.find((c) => c.id === categoryId)?.name,
-    })
-
-    if (navigator?.clipboard?.writeText) {
-      navigator.clipboard.writeText(jsonStr)
-    } else {
-      const textarea = document.createElement('textarea')
-      textarea.value = jsonStr
-      document.body.appendChild(textarea)
-      textarea.select()
-      document.execCommand('copy')
-      document.body.removeChild(textarea)
-    }
-
-    setIsCopiedJson(true)
-    setTimeout(() => {
-      setIsCopiedJson(false)
-    }, 2000)
-  }, [editor, note, title, color, categoryId, categories])
 
   useEffect(() => {
     const handleLayoutChange = (e) => {
@@ -467,6 +441,33 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
       debouncedSave(title, editor.getJSON(), color, categoryId, isPinned)
     }
   }, [editor, title, color, categoryId, isPinned, debouncedSave])
+
+  const handleCopyJson = useCallback(() => {
+    if (!editor) return
+    const jsonStr = formatNoteAsJson({
+      ...note,
+      title,
+      content: editor.getJSON(),
+      color,
+      category_name: categories.find((c) => c.id === categoryId)?.name,
+    })
+
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(jsonStr)
+    } else {
+      const textarea = document.createElement('textarea')
+      textarea.value = jsonStr
+      document.body.appendChild(textarea)
+      textarea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textarea)
+    }
+
+    setIsCopiedJson(true)
+    setTimeout(() => {
+      setIsCopiedJson(false)
+    }, 2000)
+  }, [editor, note, title, color, categoryId, categories])
 
   // In-Note Search / Word Finder logic with visual highlights (Safari / Chrome native find style)
   const scrollToActiveMatch = useCallback(() => {

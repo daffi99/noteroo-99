@@ -11,6 +11,7 @@ import Toast from './components/Toast'
 import ConfirmModal from './components/ConfirmModal'
 import AuthModal from './components/AuthModal'
 import ProfileModal from './components/ProfileModal'
+import ErrorBoundary from './components/ErrorBoundary'
 
 const NOTE_COLORS = ['orange', 'salmon', 'green', 'blue', 'pink', 'yellow']
 
@@ -479,16 +480,18 @@ function App() {
         ) : isCreatingNote || !activeNote ? (
           <NoteEditorSkeleton onBack={handleBack} />
         ) : (
-          <NoteEditor
-            key={activeNote?.id}
-            note={activeNote}
-            categories={categories}
-            canPinMore={notes.filter((n) => n.is_pinned).length < 3}
-            onSave={saveNote}
-            onBack={handleBack}
-            onDelete={handleRequestDelete}
-            onTogglePin={handleTogglePinNote}
-          />
+          <ErrorBoundary onReset={handleBack}>
+            <NoteEditor
+              key={activeNote?.id}
+              note={activeNote}
+              categories={categories}
+              canPinMore={notes.filter((n) => n.is_pinned).length < 3}
+              onSave={saveNote}
+              onBack={handleBack}
+              onDelete={handleRequestDelete}
+              onTogglePin={handleTogglePinNote}
+            />
+          </ErrorBoundary>
         )}
       </main>
 
