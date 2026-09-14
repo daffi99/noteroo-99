@@ -471,6 +471,42 @@ textarea,
   transform: scale(0.96);
 }
 
+.editor-copy-json-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  color: var(--text-main);
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: var(--font-family);
+  cursor: pointer;
+  box-shadow: var(--shadow-xs);
+  transition: border-color 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+@media (min-width: 769px) {
+  .editor-copy-json-btn:hover {
+    border-color: var(--accent, #7c3aed);
+    color: var(--accent, #7c3aed);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+.editor-copy-json-btn:active {
+  transform: scale(0.96);
+}
+
+.editor-copy-json-btn--copied {
+  border-color: #10b981 !important;
+  color: #059669 !important;
+  background: rgba(16, 185, 129, 0.08) !important;
+}
+
 /* ========== EMPTY STATE ========== */
 .empty-state {
   display: flex;
@@ -1810,6 +1846,7 @@ select, .editor-category-select {
   }
 
   .editor-export-btn span,
+  .editor-copy-json-btn span,
   .editor-pin-btn span {
     display: none;
   }
