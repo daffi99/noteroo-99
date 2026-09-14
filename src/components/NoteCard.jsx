@@ -2,12 +2,13 @@ import { useState, useRef, useEffect } from 'react'
 import { fastTap } from '../lib/fastTap'
 
 const CARD_COLORS = [
-  { name: 'orange', label: 'Orange', hex: '#FFB74D' },
-  { name: 'salmon', label: 'Salmon', hex: '#FF8A80' },
-  { name: 'green', label: 'Green', hex: '#81C784' },
-  { name: 'blue', label: 'Blue', hex: '#64B5F6' },
-  { name: 'pink', label: 'Pink', hex: '#F48FB1' },
-  { name: 'yellow', label: 'Yellow', hex: '#FFF176' },
+  { name: 'orange', label: 'Orange', hex: '#FFB84C' },
+  { name: 'salmon', label: 'Salmon', hex: '#FF8260' },
+  { name: 'green', label: 'Green', hex: '#D4EC73' },
+  { name: 'purple', label: 'Purple', hex: '#AC82FF' },
+  { name: 'blue', label: 'Blue', hex: '#22D3EE' },
+  { name: 'pink', label: 'Pink', hex: '#FF80A2' },
+  { name: 'yellow', label: 'Yellow', hex: '#FFD449' },
 ]
 
 function hasChecklists(note) {
@@ -143,7 +144,7 @@ export default function NoteCard({
           {note.is_pinned && (
             <span className="note-card__pin-badge" title="Pinned Note">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z" />
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
               </svg>
             </span>
           )}

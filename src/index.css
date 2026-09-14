@@ -315,13 +315,14 @@ textarea,
   outline-offset: 2px;
 }
 
-/* Card Colors */
-.note-card--orange { background: linear-gradient(135deg, #FFD18C, #FFB347); }
-.note-card--salmon { background: linear-gradient(135deg, #FFB4AB, #FF8A80); }
-.note-card--green  { background: linear-gradient(135deg, #A5D6A7, #81C784); }
-.note-card--blue   { background: linear-gradient(135deg, #90CAF9, #64B5F6); }
-.note-card--pink   { background: linear-gradient(135deg, #F8BBD0, #F48FB1); }
-.note-card--yellow { background: linear-gradient(135deg, #FFF9C4, #FFF176); }
+/* Card Colors - Solid Vibrant Modern Palette */
+.note-card--orange { background: #FFB84C; }
+.note-card--salmon { background: #FF8260; }
+.note-card--green  { background: #D4EC73; }
+.note-card--purple { background: #AC82FF; }
+.note-card--blue   { background: #22D3EE; }
+.note-card--pink   { background: #FF80A2; }
+.note-card--yellow { background: #FFD449; }
 
 /* Card Content */
 .note-card__content {
@@ -335,25 +336,25 @@ textarea,
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.3rem;
-  padding: 0.15rem 0.5rem;
+  gap: 0.35rem;
+  padding: 0.18rem 0.55rem;
   height: 22px;
   border-radius: var(--radius-full);
   font-size: 0.65rem;
   font-weight: 700;
-  color: rgba(0, 0, 0, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(4px);
+  color: #111827;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(8px);
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   pointer-events: none;
 }
 
 .note-card__category-dot {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   display: inline-block;
   flex-shrink: 0;
@@ -375,7 +376,7 @@ textarea,
   line-height: 1.3;
   letter-spacing: -0.02em;
   margin-bottom: 0.5rem;
-  color: rgba(0, 0, 0, 0.9);
+  color: #111827;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -393,9 +394,9 @@ textarea,
 }
 
 .note-card__date {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: rgba(0, 0, 0, 0.5);
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: rgba(17, 24, 39, 0.62);
   pointer-events: none;
 }
 
@@ -410,14 +411,15 @@ textarea,
   height: 28px;
   border-radius: 50%;
   border: none;
-  background: rgba(0, 0, 0, 0.12);
-  color: rgba(0, 0, 0, 0.7);
+  background: #111827;
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   opacity: 0;
   transform: scale(0.8);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   transition: opacity var(--transition), transform var(--transition), background var(--transition);
 }
 
@@ -432,7 +434,15 @@ textarea,
     transform: scale(1);
   }
   .note-card__edit-btn:hover {
-    background: rgba(0, 0, 0, 0.2);
+    background: #000000;
+    transform: scale(1.08);
+  }
+}
+
+@media (max-width: 768px) {
+  .note-card__edit-btn {
+    opacity: 0.9;
+    transform: scale(1);
   }
 }
 
@@ -2209,21 +2219,17 @@ select, .editor-category-select {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.15rem 0.45rem;
-  height: 22px;
-  border-radius: var(--radius-full);
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: rgba(0, 0, 0, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(4px);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #111827;
+  color: #fbbf24;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.18);
+  border: none;
 }
 
 .note-card--pinned {
-  border: 1.5px solid rgba(0, 0, 0, 0.15);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
 .note-card--menu-open {

@@ -13,7 +13,7 @@ import AuthModal from './components/AuthModal'
 import ProfileModal from './components/ProfileModal'
 import ErrorBoundary from './components/ErrorBoundary'
 
-const NOTE_COLORS = ['orange', 'salmon', 'green', 'blue', 'pink', 'yellow']
+const NOTE_COLORS = ['orange', 'salmon', 'green', 'purple', 'blue', 'pink', 'yellow']
 
 function App() {
   const [user, setUser] = useState(null)
