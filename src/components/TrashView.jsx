@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { api } from '../lib/api'
 import ConfirmModal from './ConfirmModal'
+import ThinkingPill from './ThinkingPill'
 
 export default function TrashView({ onRestoreNote }) {
   const [trashNotes, setTrashNotes] = useState([])
@@ -126,8 +127,7 @@ export default function TrashView({ onRestoreNote }) {
 
       {isLoading ? (
         <div className="loading-state">
-          <div className="loading-spinner" />
-          <p>Loading trash...</p>
+          <ThinkingPill text="Thinking...." />
         </div>
       ) : trashNotes.length === 0 ? (
         <div className="empty-state">

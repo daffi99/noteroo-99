@@ -12,6 +12,7 @@ import ConfirmModal from './components/ConfirmModal'
 import AuthModal from './components/AuthModal'
 import ProfileModal from './components/ProfileModal'
 import ErrorBoundary from './components/ErrorBoundary'
+import ThinkingPill from './components/ThinkingPill'
 
 const NOTE_COLORS = ['orange', 'salmon', 'green', 'purple', 'blue', 'pink', 'yellow']
 
@@ -382,8 +383,7 @@ function App() {
   if (isCheckingAuth) {
     return (
       <div className="auth-loading-screen">
-        <div className="loading-spinner" />
-        <p>Loading Noteroo...</p>
+        <ThinkingPill text="Thinking...." />
       </div>
     )
   }
@@ -445,8 +445,7 @@ function App() {
             </div>
             {isLoading ? (
               <div className="loading-state">
-                <div className="loading-spinner" />
-                <p>Loading notes...</p>
+                <ThinkingPill text="Thinking...." />
               </div>
             ) : (
               <NoteGrid

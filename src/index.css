@@ -3075,9 +3075,72 @@ mark {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
-  background: var(--bg-main);
-  color: var(--text-main);
+  background: #121214;
+  color: #ededed;
+}
+
+/* Thinking Orb Pill Loader */
+.thinking-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.55rem 1.45rem 0.55rem 0.85rem;
+  background: rgba(24, 24, 27, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), 0 2px 10px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.thinking-pill__text {
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: rgba(251, 251, 251, 0.55);
+  line-height: 1;
+}
+
+/* transitions.dev shimmer text effect */
+.t-shimmer {
+  position: relative;
+  display: inline-block;
+}
+
+.t-shimmer::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    transparent 40%,
+    #ffffff 50%,
+    transparent 60%,
+    transparent 100%
+  );
+  background-size: 400% 100%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: t-shimmer 2.2s linear infinite;
+}
+
+@keyframes t-shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: 0% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-shimmer::before {
+    animation: none !important;
+  }
 }
 
 .auth-modal-overlay {

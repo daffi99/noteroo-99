@@ -1,7 +1,7 @@
 {
   "name": "noteroo",
   "private": true,
-  "version": "1.42.0",
+  "version": "1.43.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -28,7 +28,8 @@
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "thinking-orbs": "^0.3.1"
   },
   "devDependencies": {
     "@types/react": "^19.2.17",
