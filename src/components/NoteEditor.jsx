@@ -13,6 +13,7 @@ import { SearchHighlightExtension, searchPluginKey, findMatchesInDoc } from '../
 import { getSavedLayoutMode, setSavedLayoutMode } from '../lib/layout-mode.js'
 
 import { fastTap } from '../lib/fastTap'
+import { cleanPastedHtml } from '../lib/paste-cleaner'
 
 const HIGHLIGHT_COLORS = [
   { name: 'Yellow', color: '#fef08a' },
@@ -339,6 +340,11 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
       SearchHighlightExtension,
     ],
     content: note?.content || '',
+    editorProps: {
+      transformPastedHTML(html) {
+        return cleanPastedHtml(html)
+      },
+    },
     onUpdate: ({ editor: currentEditor }) => {
       debouncedSave(title, currentEditor.getJSON(), color, categoryId, isPinned)
     },
