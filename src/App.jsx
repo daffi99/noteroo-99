@@ -383,7 +383,7 @@ function App() {
   if (isCheckingAuth) {
     return (
       <div className="auth-loading-screen">
-        <ThinkingPill text="Thinking...." />
+        <ThinkingPill text="Loading...." />
       </div>
     )
   }
@@ -445,7 +445,7 @@ function App() {
             </div>
             {isLoading ? (
               <div className="loading-state">
-                <ThinkingPill text="Thinking...." />
+                <ThinkingPill text="Loading...." />
               </div>
             ) : (
               <NoteGrid

@@ -127,7 +127,7 @@ export default function TrashView({ onRestoreNote }) {
 
       {isLoading ? (
         <div className="loading-state">
-          <ThinkingPill text="Thinking...." />
+          <ThinkingPill text="Loading...." />
         </div>
       ) : trashNotes.length === 0 ? (
         <div className="empty-state">
