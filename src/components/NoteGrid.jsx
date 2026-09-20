@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import NoteCard from './NoteCard'
 import { fastTap } from '../lib/fastTap'
+import CategoryIcon from './CategoryIcon'
 
 function extractTextFromContent(content) {
   if (!content) return ''
@@ -30,7 +31,6 @@ export default function NoteGrid({
   searchQuery = '',
   onTogglePin,
   onDeleteNote,
-  onChangeColor,
   onResetCheckmarks,
 }) {
   const safeNotes = Array.isArray(notes) ? notes : []
@@ -90,7 +90,9 @@ export default function NoteGrid({
                 className={`category-tab ${selectedCategory === cat.id ? 'category-tab--active' : ''}`}
                 {...fastTap(() => setSelectedCategory(cat.id))}
               >
-                <span className="category-tab__dot" style={{ backgroundColor: cat.color || '#7c3aed' }} />
+                <span className="category-tab__icon" style={{ color: cat.color || '#7c3aed' }}>
+                  <CategoryIcon icon={cat.icon} fallback={cat.name} size={13} />
+                </span>
                 {cat.name} ({count})
               </button>
             )
@@ -135,7 +137,6 @@ export default function NoteGrid({
               onClick={onNoteClick}
               onTogglePin={onTogglePin}
               onDeleteNote={onDeleteNote}
-              onChangeColor={onChangeColor}
               onResetCheckmarks={onResetCheckmarks}
               canPinMore={canPinMore}
               style={{ animationDelay: `${index * 0.05}s` }}

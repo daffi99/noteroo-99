@@ -14,6 +14,7 @@ import { getSavedLayoutMode, setSavedLayoutMode } from '../lib/layout-mode.js'
 
 import { fastTap } from '../lib/fastTap'
 import { cleanPastedHtml } from '../lib/paste-cleaner'
+import { getCategoryColorName } from '../lib/colors'
 
 const HIGHLIGHT_COLORS = [
   { name: 'Yellow', color: '#fef08a' },
@@ -278,7 +279,11 @@ const CustomHighlight = Highlight.extend({
 
 export default function NoteEditor({ note, categories = [], onSave, onBack, onDelete, onTogglePin, canPinMore = true }) {
   const [title, setTitle] = useState(note?.title || '')
-  const color = note?.color || 'orange'
+  const initialCat = categories.find((c) => c.id === note?.category_id)
+  const initialColor = note?.category_id
+    ? (initialCat ? getCategoryColorName(initialCat.color) : (note?.color || 'blue'))
+    : 'grey'
+  const [color, setColor] = useState(initialColor)
   const [categoryId, setCategoryId] = useState(note?.category_id || '')
   const [isPinned, setIsPinned] = useState(Boolean(note?.is_pinned))
   const [isSaving, setIsSaving] = useState(false)
@@ -405,8 +410,11 @@ export default function NoteEditor({ note, categories = [], onSave, onBack, onDe
   const handleCategoryChange = (val) => {
     const newCatId = typeof val === 'object' && val !== null && 'target' in val ? val.target.value : val
     setCategoryId(newCatId)
+    const targetCat = categories.find((c) => c.id === newCatId)
+    const newColor = newCatId ? (targetCat ? getCategoryColorName(targetCat.color) : 'blue') : 'grey'
+    setColor(newColor)
     if (editor) {
-      debouncedSave(title, editor.getJSON(), color, newCatId, isPinned)
+      debouncedSave(title, editor.getJSON(), newColor, newCatId, isPinned)
     }
   }
 

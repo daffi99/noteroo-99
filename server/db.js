@@ -63,6 +63,9 @@ export async function ensureDb() {
       ALTER TABLE categories ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES users(id) ON DELETE CASCADE;
     `
     await sql`
+      ALTER TABLE categories ADD COLUMN IF NOT EXISTS icon TEXT DEFAULT NULL;
+    `
+    await sql`
       ALTER TABLE categories DROP CONSTRAINT IF EXISTS categories_name_key;
     `
     await sql`

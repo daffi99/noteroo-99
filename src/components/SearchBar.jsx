@@ -7,6 +7,7 @@ const SearchBar = ({
   user,
   onOpenProfile,
   onLogout,
+  onNavigate,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -113,42 +114,42 @@ const SearchBar = ({
       </div>
 
       {user && (
-        <div className="mobile-search-options" ref={menuRef}>
+        <div className="profile-options-wrapper" ref={menuRef}>
           <button
             type="button"
-            className={`mobile-options-btn ${isMenuOpen ? 'mobile-options-btn--active' : ''}`}
+            className={`profile-options-btn ${isMenuOpen ? 'profile-options-btn--active' : ''}`}
             onClick={() => setIsMenuOpen((prev) => !prev)}
-            title="More Options"
-            aria-label="More Options"
+            title={`${user.name || user.email} • Profile & Settings`}
+            aria-label="Profile and Settings"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <circle cx="12" cy="5" r="2" />
-              <circle cx="12" cy="12" r="2" />
-              <circle cx="12" cy="19" r="2" />
-            </svg>
+            {user.avatar_url ? (
+              <img src={user.avatar_url} alt="Profile" className="profile-options-btn__avatar-img" />
+            ) : (
+              <span className="profile-options-btn__initial">{userInitial}</span>
+            )}
           </button>
 
           {isMenuOpen && (
-            <div className="mobile-options-menu">
-              <div className="mobile-options-menu__user-header">
-                <div className="mobile-options-menu__avatar">
+            <div className="profile-options-menu">
+              <div className="profile-options-menu__user-header">
+                <div className="profile-options-menu__avatar">
                   {user.avatar_url ? (
-                    <img src={user.avatar_url} alt="Profile" className="mobile-options-menu__avatar-img" />
+                    <img src={user.avatar_url} alt="Profile" className="profile-options-menu__avatar-img" />
                   ) : (
                     userInitial
                   )}
                 </div>
-                <div className="mobile-options-menu__user-info">
-                  <span className="mobile-options-menu__user-name">{user.name || 'User'}</span>
-                  <span className="mobile-options-menu__user-email">{user.email}</span>
+                <div className="profile-options-menu__user-info">
+                  <span className="profile-options-menu__user-name">{user.name || 'User'}</span>
+                  <span className="profile-options-menu__user-email">{user.email}</span>
                 </div>
               </div>
 
-              <div className="mobile-options-menu__divider" />
+              <div className="profile-options-menu__divider" />
 
               <button
                 type="button"
-                className="mobile-options-menu__item"
+                className="profile-options-menu__item"
                 onClick={() => {
                   setIsMenuOpen(false);
                   if (onOpenProfile) onOpenProfile();
@@ -158,12 +159,48 @@ const SearchBar = ({
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
                 </svg>
-                <span>Edit Profile</span>
+                <span>Profile Settings</span>
               </button>
+
+              {onNavigate && (
+                <>
+                  <button
+                    type="button"
+                    className="profile-options-menu__item"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      onNavigate('categories');
+                    }}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="3" />
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                    </svg>
+                    <span>Manage Categories</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="profile-options-menu__item"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      onNavigate('trash');
+                    }}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      <line x1="10" y1="11" x2="10" y2="17" />
+                      <line x1="14" y1="11" x2="14" y2="17" />
+                    </svg>
+                    <span>Deleted Page (Trash)</span>
+                  </button>
+                </>
+              )}
 
               <button
                 type="button"
-                className="mobile-options-menu__item mobile-options-menu__item--reload"
+                className="profile-options-menu__item profile-options-menu__item--reload"
                 onClick={() => {
                   setIsMenuOpen(false);
                   handleHardRefresh();
@@ -176,11 +213,11 @@ const SearchBar = ({
                 <span>Reload App ({displayVersion})</span>
               </button>
 
-              <div className="mobile-options-menu__divider" />
+              <div className="profile-options-menu__divider" />
 
               <button
                 type="button"
-                className="mobile-options-menu__item mobile-options-menu__item--logout"
+                className="profile-options-menu__item profile-options-menu__item--logout"
                 onClick={() => {
                   setIsMenuOpen(false);
                   if (onLogout) onLogout();

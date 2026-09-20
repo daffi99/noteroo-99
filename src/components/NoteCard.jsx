@@ -1,15 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { fastTap } from '../lib/fastTap'
-
-const CARD_COLORS = [
-  { name: 'orange', label: 'Orange', hex: '#FFEDD5' },
-  { name: 'salmon', label: 'Salmon', hex: '#FFE4D6' },
-  { name: 'green', label: 'Green', hex: '#DCFCE7' },
-  { name: 'purple', label: 'Purple', hex: '#EDE9FE' },
-  { name: 'blue', label: 'Blue', hex: '#E0F2FE' },
-  { name: 'pink', label: 'Pink', hex: '#FFE4E6' },
-  { name: 'yellow', label: 'Yellow', hex: '#FEF3C7' },
-]
+import CategoryIcon from './CategoryIcon'
+import { getCategoryColorName } from '../lib/colors'
 
 function hasChecklists(note) {
   if (!note?.content) return false
@@ -38,13 +30,11 @@ export default function NoteCard({
   onClick,
   onTogglePin,
   onDeleteNote,
-  onChangeColor,
   onResetCheckmarks,
   canPinMore = true,
   style,
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [showColorPalette, setShowColorPalette] = useState(false)
   const menuRef = useRef(null)
 
   const formatDate = (dateString) => {
@@ -56,19 +46,17 @@ export default function NoteCard({
     })
   }
 
-  // Close 3-dot menu & palette on click outside or escape key
+  // Close 3-dot menu on click outside or escape key
   useEffect(() => {
     if (!isMenuOpen) return
     function handleClickOutside(event) {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
         setIsMenuOpen(false)
-        setShowColorPalette(false)
       }
     }
     function handleKeyDown(event) {
       if (event.key === 'Escape') {
         setIsMenuOpen(false)
-        setShowColorPalette(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -81,16 +69,12 @@ export default function NoteCard({
 
   const handleMenuToggle = (e) => {
     e.stopPropagation()
-    setIsMenuOpen((prev) => {
-      if (prev) setShowColorPalette(false)
-      return !prev
-    })
+    setIsMenuOpen((prev) => !prev)
   }
 
   const handlePinAction = (e) => {
     e.stopPropagation()
     setIsMenuOpen(false)
-    setShowColorPalette(false)
     if (onTogglePin) {
       onTogglePin(note)
     }
@@ -99,25 +83,14 @@ export default function NoteCard({
   const handleEditAction = (e) => {
     e.stopPropagation()
     setIsMenuOpen(false)
-    setShowColorPalette(false)
     if (onClick) onClick(note)
   }
 
   const handleDeleteMenuClick = (e) => {
     e.stopPropagation()
     setIsMenuOpen(false)
-    setShowColorPalette(false)
     if (onDeleteNote) {
       onDeleteNote(note)
-    }
-  }
-
-  const handleColorSelect = (e, colorName) => {
-    e.stopPropagation()
-    setIsMenuOpen(false)
-    setShowColorPalette(false)
-    if (onChangeColor) {
-      onChangeColor(note, colorName)
     }
   }
 
@@ -129,165 +102,121 @@ export default function NoteCard({
     if (onClick) onClick(note)
   })
 
+  // Determine card color strictly from category, or grey if uncategorized
+  const cardColor = note.category_id
+    ? (getCategoryColorName(note.category_color) || note.color || 'blue')
+    : 'grey'
+
+  // Category name or fallback
+  const categoryLabel = (note.category_name || 'NO CATEGORY').toUpperCase()
+
   return (
     <div
-      className={`note-card note-card--${note.color || 'orange'} ${note.is_pinned ? 'note-card--pinned' : ''} ${isMenuOpen ? 'note-card--menu-open' : ''}`}
+      className={`note-card note-card--${cardColor} ${note.is_pinned ? 'note-card--pinned' : ''} ${isMenuOpen ? 'note-card--menu-open' : ''}`}
       {...cardTapHandlers}
       role="button"
       tabIndex={0}
       style={style}
       onKeyDown={(e) => e.key === 'Enter' && onClick && onClick(note)}
     >
-      {/* Top Row: Badges (Pinned + Category) on Left, 3-Dot Options Menu on Right */}
-      <div className="note-card__header">
-        <div className="note-card__badges">
+      {/* Top Row: Category on Left, Category Icon + 3-Dot Options on Right */}
+      <div className="note-card__top">
+        <div className="note-card__category">
           {note.is_pinned && (
-            <span className="note-card__pin-badge" title="Pinned Note">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+            <span className="note-card__pinned-star" title="Pinned Note">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
               </svg>
             </span>
           )}
-          {note.category_name && (
-            <span className="note-card__category-badge">
-              <span
-                className="note-card__category-dot"
-                style={{ backgroundColor: note.category_color || '#7c3aed' }}
-              />
-              {note.category_name}
-            </span>
-          )}
+          <span className="note-card__category-text">{categoryLabel}</span>
         </div>
 
-        {/* 3-Dot Menu Button & Animated Color Palette Popup */}
-        <div className="note-card__menu-wrapper" ref={menuRef}>
-          <button
-            type="button"
-            className={`note-card__menu-btn ${isMenuOpen ? 'note-card__menu-btn--visible' : ''}`}
-            onClick={handleMenuToggle}
-            aria-label="Note options"
-            title="Note options"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <circle cx="12" cy="5" r="2" />
-              <circle cx="12" cy="12" r="2" />
-              <circle cx="12" cy="19" r="2" />
-            </svg>
-          </button>
+        <div className="note-card__top-right">
+          {/* Category Icon Button - Clicking opens Note Options */}
+          <div className="note-card__menu-wrapper" ref={menuRef}>
+            <button
+              type="button"
+              className={`note-card__category-btn ${isMenuOpen ? 'note-card__category-btn--open' : ''}`}
+              onClick={handleMenuToggle}
+              aria-label="Note options"
+              title={note.category_name ? `${note.category_name} (Options)` : 'Note options'}
+            >
+              <CategoryIcon 
+                icon={note.category_icon} 
+                fallback={note.category_name} 
+                size={18} 
+              />
+            </button>
 
-          {isMenuOpen && (
-            <>
-              {showColorPalette ? (
-                <div className="note-card__color-popover-pill" role="menu" onClick={(e) => e.stopPropagation()}>
-                  <div className="note-card__color-popover-header">
-                    <button
-                      type="button"
-                      className="note-card__color-popover-back"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setShowColorPalette(false)
-                      }}
-                    >
-                      ‹ Options
-                    </button>
-                    <span>Card Color</span>
-                  </div>
-                  <div className="note-card__color-swatch-row">
-                    {CARD_COLORS.map((c) => (
-                      <button
-                        key={c.name}
-                        type="button"
-                        className={`note-card__color-swatch ${note.color === c.name ? 'note-card__color-swatch--active' : ''}`}
-                        style={{ backgroundColor: c.hex }}
-                        title={c.label}
-                        onClick={(e) => handleColorSelect(e, c.name)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="note-card__dropdown-menu" role="menu">
-                  {showPinOption && (
-                    <button
-                      type="button"
-                      className="note-card__dropdown-item"
-                      onClick={handlePinAction}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z" />
-                      </svg>
-                      <span>{note.is_pinned ? 'Unpin note' : 'Pin note'}</span>
-                    </button>
-                  )}
+            {isMenuOpen && (
+              <div className="note-card__dropdown-menu" role="menu">
+                {showPinOption && (
+                  <button
+                    type="button"
+                    className="note-card__dropdown-item"
+                    onClick={handlePinAction}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z" />
+                    </svg>
+                    <span>{note.is_pinned ? 'Unpin note' : 'Pin note'}</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="note-card__dropdown-item"
+                  onClick={handleEditAction}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                  <span>Edit note</span>
+                </button>
+                {hasChecklists(note) && onResetCheckmarks && (
                   <button
                     type="button"
                     className="note-card__dropdown-item"
                     onClick={(e) => {
                       e.stopPropagation()
-                      setShowColorPalette(true)
+                      setIsMenuOpen(false)
+                      onResetCheckmarks(note)
                     }}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
-                      <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
-                      <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
-                      <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
-                      <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.92 0 1.7-.75 1.7-1.67 0-.42-.16-.8-.43-1.09-.27-.28-.44-.68-.44-1.12 0-.92.75-1.67 1.67-1.67H16c3.31 0 6-2.69 6-6 0-4.96-4.49-9-10-9z" />
+                      <rect x="3" y="3" width="18" height="18" rx="3" />
+                      <path d="M8 12l2.5 2.5L16 9" opacity="0.4" />
+                      <line x1="3" y1="21" x2="21" y2="3" stroke="#ef4444" strokeWidth="2" />
                     </svg>
-                    <span>Change color</span>
+                    <span>Reset checkmarks</span>
                   </button>
+                )}
+                {onDeleteNote && (
                   <button
                     type="button"
-                    className="note-card__dropdown-item"
-                    onClick={handleEditAction}
+                    className="note-card__dropdown-item note-card__dropdown-item--danger"
+                    onClick={handleDeleteMenuClick}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                     </svg>
-                    <span>Edit note</span>
+                    <span>Delete note</span>
                   </button>
-                  {hasChecklists(note) && onResetCheckmarks && (
-                    <button
-                      type="button"
-                      className="note-card__dropdown-item"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setIsMenuOpen(false)
-                        onResetCheckmarks(note)
-                      }}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="3" width="18" height="18" rx="3" />
-                        <path d="M8 12l2.5 2.5L16 9" opacity="0.4" />
-                        <line x1="3" y1="21" x2="21" y2="3" stroke="#ef4444" strokeWidth="2" />
-                      </svg>
-                      <span>Reset checkmarks</span>
-                    </button>
-                  )}
-                  {onDeleteNote && (
-                    <button
-                      type="button"
-                      className="note-card__dropdown-item note-card__dropdown-item--danger"
-                      onClick={handleDeleteMenuClick}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="3 6 5 6 21 6" />
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                      </svg>
-                      <span>Delete note</span>
-                    </button>
-                  )}
-                </div>
-              )}
-            </>
-          )}
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
+      {/* Card Body: Title directly on the card */}
       <div className="note-card__content">
         <h3 className="note-card__title">{note.title || 'Untitled'}</h3>
       </div>
+
+      {/* Footer: Date */}
       <div className="note-card__footer">
         <span className="note-card__date">{formatDate(note.created_at)}</span>
       </div>

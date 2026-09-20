@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { sql } from '../db.js'
 import { authenticate } from '../middleware/auth.js'
+import { getCategoryColorName } from '../colors.js'
 
 const router = Router()
 
@@ -27,7 +28,7 @@ router.get('/', async (req, res) => {
 // POST create category for authenticated user strictly
 router.post('/', async (req, res) => {
   try {
-    const { name, color = '#7c3aed' } = req.body
+    const { name, color = '#7c3aed', icon = null } = req.body
     if (!name || !name.trim()) {
       return res.status(400).json({ error: 'Category name is required' })
     }
@@ -44,8 +45,8 @@ router.post('/', async (req, res) => {
     }
 
     const [category] = await sql`
-      INSERT INTO categories (name, color, user_id)
-      VALUES (${cleanName}, ${color}, ${req.user.id})
+      INSERT INTO categories (name, color, icon, user_id)
+      VALUES (${cleanName}, ${color}, ${icon}, ${req.user.id})
       RETURNING *
     `
     res.status(201).json(category)
@@ -57,7 +58,7 @@ router.post('/', async (req, res) => {
 // PUT update category strictly for authenticated user
 router.put('/:id', async (req, res) => {
   try {
-    const { name, color } = req.body
+    const { name, color, icon } = req.body
     if (!name || !name.trim()) {
       return res.status(400).json({ error: 'Category name is required' })
     }
@@ -66,11 +67,22 @@ router.put('/:id', async (req, res) => {
       UPDATE categories
       SET name = ${name.trim()},
           color = ${color},
+          icon = COALESCE(${icon}, icon),
           user_id = ${req.user.id}
       WHERE id = ${req.params.id} AND user_id = ${req.user.id}
       RETURNING *
     `
     if (!category) return res.status(404).json({ error: 'Category not found' })
+
+    if (color) {
+      const mappedColor = getCategoryColorName(color)
+      await sql`
+        UPDATE notes
+        SET color = ${mappedColor}
+        WHERE category_id = ${req.params.id} AND user_id = ${req.user.id}
+      `
+    }
+
     res.json(category)
   } catch (err) {
     res.status(500).json({ error: err.message })

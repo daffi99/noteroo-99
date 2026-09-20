@@ -1,27 +1,38 @@
 import { useState } from 'react'
 import ConfirmModal from './ConfirmModal'
 import { fastTap } from '../lib/fastTap'
+import CategoryIcon, { AVAILABLE_ICONS, resolveIconByName } from './CategoryIcon'
 
 const COLOR_PRESETS = [
-  '#7c3aed', // Purple
   '#3b82f6', // Blue
   '#10b981', // Green
-  '#f59e0b', // Amber
-  '#ef4444', // Red
+  '#7c3aed', // Purple
+  '#f59e0b', // Yellow
+  '#ef4444', // Salmon
+  '#ea580c', // Orange
   '#ec4899', // Pink
-  '#8b5cf6', // Indigo
-  '#06b6d4', // Cyan
-  '#64748b', // Slate
+  '#64748b', // Grey
 ]
 
 export default function CategoryManager({ categories, onCreateCategory, onUpdateCategory, onDeleteCategory, onBack }) {
   const [newCatName, setNewCatName] = useState('')
   const [newCatColor, setNewCatColor] = useState(COLOR_PRESETS[0])
+  const [newCatIcon, setNewCatIcon] = useState('file-text')
   const [editingId, setEditingId] = useState(null)
   const [editName, setEditName] = useState('')
   const [editColor, setEditColor] = useState('')
+  const [editIcon, setEditIcon] = useState('file-text')
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleNameChange = (val) => {
+    setNewCatName(val)
+    // Automatically suggest best matching icon as user types if they haven't explicitly picked a different one
+    const suggested = resolveIconByName(val)
+    if (suggested) {
+      setNewCatIcon(suggested)
+    }
+  }
 
   const handleCreate = async (e) => {
     e.preventDefault()
@@ -29,9 +40,14 @@ export default function CategoryManager({ categories, onCreateCategory, onUpdate
     setError('')
     setIsSubmitting(true)
     try {
-      await onCreateCategory({ name: newCatName.trim(), color: newCatColor })
+      await onCreateCategory({ 
+        name: newCatName.trim(), 
+        color: newCatColor,
+        icon: newCatIcon || resolveIconByName(newCatName.trim())
+      })
       setNewCatName('')
       setNewCatColor(COLOR_PRESETS[0])
+      setNewCatIcon('file-text')
     } catch (err) {
       setError(err.message || 'Failed to create category')
     } finally {
@@ -43,6 +59,7 @@ export default function CategoryManager({ categories, onCreateCategory, onUpdate
     setEditingId(cat.id)
     setEditName(cat.name)
     setEditColor(cat.color || COLOR_PRESETS[0])
+    setEditIcon(cat.icon || resolveIconByName(cat.name))
     setError('')
   }
 
@@ -50,13 +67,18 @@ export default function CategoryManager({ categories, onCreateCategory, onUpdate
     setEditingId(null)
     setEditName('')
     setEditColor('')
+    setEditIcon('file-text')
   }
 
   const handleUpdate = async (id) => {
     if (!editName.trim()) return
     setError('')
     try {
-      await onUpdateCategory(id, { name: editName.trim(), color: editColor })
+      await onUpdateCategory(id, { 
+        name: editName.trim(), 
+        color: editColor,
+        icon: editIcon || resolveIconByName(editName.trim())
+      })
       setEditingId(null)
     } catch (err) {
       setError(err.message || 'Failed to update category')
@@ -104,7 +126,7 @@ export default function CategoryManager({ categories, onCreateCategory, onUpdate
               className="category-input"
               placeholder="Category name (e.g. Finance, Projects...)"
               value={newCatName}
-              onChange={(e) => setNewCatName(e.target.value)}
+              onChange={(e) => handleNameChange(e.target.value)}
               required
             />
           </div>
@@ -120,6 +142,23 @@ export default function CategoryManager({ categories, onCreateCategory, onUpdate
                   style={{ backgroundColor: color }}
                   onClick={() => setNewCatColor(color)}
                 />
+              ))}
+            </div>
+          </div>
+
+          <div className="category-form-group">
+            <label className="category-label">Category Icon</label>
+            <div className="category-icon-presets">
+              {AVAILABLE_ICONS.map(({ id, label, icon: IconComp }) => (
+                <button
+                  key={id}
+                  type="button"
+                  className={`category-icon-btn ${newCatIcon === id ? 'category-icon-btn--selected' : ''}`}
+                  onClick={() => setNewCatIcon(id)}
+                  title={label}
+                >
+                  <IconComp size={16} />
+                </button>
               ))}
             </div>
           </div>
@@ -162,6 +201,19 @@ export default function CategoryManager({ categories, onCreateCategory, onUpdate
                           />
                         ))}
                       </div>
+                      <div className="category-icon-presets small">
+                        {AVAILABLE_ICONS.map(({ id, label, icon: IconComp }) => (
+                          <button
+                            key={id}
+                            type="button"
+                            className={`category-icon-btn ${editIcon === id ? 'category-icon-btn--selected' : ''}`}
+                            onClick={() => setEditIcon(id)}
+                            title={label}
+                          >
+                            <IconComp size={14} />
+                          </button>
+                        ))}
+                      </div>
                       <div className="category-item-actions">
                         <button className="btn-save" onClick={() => handleUpdate(cat.id)}>Save</button>
                         <button className="btn-cancel" onClick={cancelEdit}>Cancel</button>
@@ -170,7 +222,12 @@ export default function CategoryManager({ categories, onCreateCategory, onUpdate
                   ) : (
                     <div className="category-item-view">
                       <div className="category-item-info">
-                        <span className="category-badge" style={{ backgroundColor: cat.color || '#7c3aed' }} />
+                        <span 
+                          className="category-badge category-badge--with-icon" 
+                          style={{ backgroundColor: `${cat.color || '#7c3aed'}18`, color: cat.color || '#7c3aed' }}
+                        >
+                          <CategoryIcon icon={cat.icon} fallback={cat.name} size={15} />
+                        </span>
                         <span className="category-name">{cat.name}</span>
                         <span className="category-count">{cat.note_count || 0} notes</span>
                       </div>

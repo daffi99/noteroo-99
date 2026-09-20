@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import CategoryIcon from './CategoryIcon'
 
 export default function CategoryDropdown({ categories = [], value, onChange, placeholder = 'No Category' }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -42,10 +43,12 @@ export default function CategoryDropdown({ categories = [], value, onChange, pla
         title="Select Category"
       >
         <span className="custom-dropdown__icon-wrapper">
-          {selectedCategory?.color ? (
-            <span
-              className="custom-dropdown__color-dot"
-              style={{ backgroundColor: selectedCategory.color }}
+          {selectedCategory ? (
+            <CategoryIcon 
+              icon={selectedCategory.icon} 
+              fallback={selectedCategory.name} 
+              size={15} 
+              style={{ color: selectedCategory.color || 'var(--accent)' }} 
             />
           ) : (
             <svg
@@ -130,9 +133,11 @@ export default function CategoryDropdown({ categories = [], value, onChange, pla
               >
                 <div className="custom-dropdown__item-left">
                   <span
-                    className="custom-dropdown__color-dot"
-                    style={{ backgroundColor: cat.color || '#7c3aed' }}
-                  />
+                    className="custom-dropdown__item-icon-wrap"
+                    style={{ color: cat.color || '#7c3aed' }}
+                  >
+                    <CategoryIcon icon={cat.icon} fallback={cat.name} size={15} />
+                  </span>
                   <span className="custom-dropdown__item-name">{cat.name}</span>
                 </div>
                 {isSelected && (

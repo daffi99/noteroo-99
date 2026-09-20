@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { sql } from '../db.js'
 import { authenticate } from '../middleware/auth.js'
+import { getCategoryColorName } from '../colors.js'
 
 const router = Router()
 
@@ -14,7 +15,8 @@ router.get('/', async (req, res) => {
       SELECT 
         n.*,
         c.name as category_name,
-        c.color as category_color
+        c.color as category_color,
+        c.icon as category_icon
       FROM notes n
       LEFT JOIN categories c ON n.category_id = c.id
       WHERE n.deleted_at IS NULL AND n.user_id = ${req.user.id}
@@ -41,7 +43,8 @@ router.get('/trash', async (req, res) => {
       SELECT 
         n.*,
         c.name as category_name,
-        c.color as category_color
+        c.color as category_color,
+        c.icon as category_icon
       FROM notes n
       LEFT JOIN categories c ON n.category_id = c.id
       WHERE n.deleted_at IS NOT NULL AND n.user_id = ${req.user.id}
@@ -60,7 +63,8 @@ router.get('/:id', async (req, res) => {
       SELECT 
         n.*,
         c.name as category_name,
-        c.color as category_color
+        c.color as category_color,
+        c.icon as category_icon
       FROM notes n
       LEFT JOIN categories c ON n.category_id = c.id
       WHERE n.id = ${req.params.id} AND n.user_id = ${req.user.id}
@@ -75,7 +79,7 @@ router.get('/:id', async (req, res) => {
 // POST create note for authenticated user
 router.post('/', async (req, res) => {
   try {
-    const { title = 'Untitled', content = null, color = 'orange', category_id = null, is_pinned = false } = req.body
+    const { title = 'Untitled', content = null, category_id = null, is_pinned = false } = req.body
     if (is_pinned) {
       const [{ count }] = await sql`
         SELECT count(*)::int as count FROM notes 
@@ -86,12 +90,18 @@ router.post('/', async (req, res) => {
       }
     }
 
+    let finalColor = 'grey'
+    if (category_id) {
+      const [cat] = await sql`SELECT color FROM categories WHERE id = ${category_id} AND user_id = ${req.user.id}`
+      if (cat) finalColor = getCategoryColorName(cat.color)
+    }
+
     const [created] = await sql`
       INSERT INTO notes (title, content, color, category_id, user_id, is_pinned, pinned_at)
       VALUES (
         ${title},
         ${content ? JSON.stringify(content) : null}::jsonb,
-        ${color},
+        ${finalColor},
         ${category_id || null},
         ${req.user.id},
         ${Boolean(is_pinned)},
@@ -104,7 +114,8 @@ router.post('/', async (req, res) => {
       SELECT 
         n.*,
         c.name as category_name,
-        c.color as category_color
+        c.color as category_color,
+        c.icon as category_icon
       FROM notes n
       LEFT JOIN categories c ON n.category_id = c.id
       WHERE n.id = ${created.id}
@@ -137,8 +148,18 @@ router.put('/:id', async (req, res) => {
 
     const updatedTitle = title !== undefined ? title : existingNote.title
     const updatedContent = content !== undefined ? content : existingNote.content
-    const updatedColor = color !== undefined ? color : existingNote.color
     const updatedCategoryId = category_id !== undefined ? category_id : existingNote.category_id
+    let updatedColor = existingNote.color
+    if (category_id !== undefined) {
+      if (category_id) {
+        const [cat] = await sql`SELECT color FROM categories WHERE id = ${category_id} AND user_id = ${req.user.id}`
+        if (cat) updatedColor = getCategoryColorName(cat.color)
+      } else {
+        updatedColor = 'grey'
+      }
+    } else if (color !== undefined) {
+      updatedColor = color
+    }
     const updatedIsPinned = is_pinned !== undefined ? Boolean(is_pinned) : Boolean(existingNote.is_pinned)
 
     let pinnedAtValue = existingNote.pinned_at
@@ -166,7 +187,8 @@ router.put('/:id', async (req, res) => {
       SELECT 
         n.*,
         c.name as category_name,
-        c.color as category_color
+        c.color as category_color,
+        c.icon as category_icon
       FROM notes n
       LEFT JOIN categories c ON n.category_id = c.id
       WHERE n.id = ${updated.id}

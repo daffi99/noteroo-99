@@ -3,7 +3,7 @@ import { api } from '../lib/api'
 import ConfirmModal from './ConfirmModal'
 import ThinkingPill from './ThinkingPill'
 
-export default function TrashView({ onRestoreNote }) {
+export default function TrashView({ onRestoreNote, onBack }) {
   const [trashNotes, setTrashNotes] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [modalConfig, setModalConfig] = useState({
@@ -94,6 +94,17 @@ export default function TrashView({ onRestoreNote }) {
 
   return (
     <div className="trash-view">
+      {onBack && (
+        <div className="trash-view__back">
+          <button className="editor-back-btn" onClick={onBack} title="Back to dashboard">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
+            </svg>
+            <span>Back to Notes</span>
+          </button>
+        </div>
+      )}
       <div className="trash-header">
         <div className="trash-header__left">
           <div className="trash-header__icon">

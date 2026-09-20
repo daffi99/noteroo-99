@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { api } from './lib/api'
-import Sidebar from './components/Sidebar'
 import SearchBar from './components/SearchBar'
 import NoteGrid from './components/NoteGrid'
 import NoteEditor from './components/NoteEditor'
@@ -179,7 +178,6 @@ function App() {
   }
 
   const createNote = async () => {
-    const randomColor = NOTE_COLORS[Math.floor(Math.random() * NOTE_COLORS.length)]
     setIsCreatingNote(true)
     setActiveNote(null)
     setView('editor')
@@ -187,7 +185,7 @@ function App() {
       const note = await api.createNote({
         title: 'Untitled',
         content: null,
-        color: randomColor,
+        color: 'grey',
         is_pinned: false,
       })
       setNotes((prev) => sortNotes([note, ...prev]))
@@ -420,29 +418,37 @@ function App() {
         onCancel={() => setNoteToDelete(null)}
       />
 
-      <Sidebar
-        activeView={view}
-        onNavigate={(targetView) => {
-          setActiveNote(null)
-          setView(targetView)
-        }}
-        onNewNote={createNote}
-        user={user}
-        onOpenProfile={() => setIsProfileOpen(true)}
-        onLogout={handleLogout}
-      />
       <main className="main-content" ref={mainContentRef}>
         {view === 'dashboard' ? (
           <>
-            <div className="dashboard-header">
-              <SearchBar
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                user={user}
-                onOpenProfile={() => setIsProfileOpen(true)}
-                onLogout={handleLogout}
-              />
-            </div>
+            <header className="dashboard-topbar">
+              <div
+                className="dashboard-topbar__brand"
+                onClick={() => {
+                  setActiveNote(null)
+                  setView('dashboard')
+                }}
+                title="Noteroo"
+                role="button"
+                tabIndex={0}
+              >
+                <img src="/favicon.png" alt="Noteroo Logo" className="dashboard-topbar__logo" />
+                <span className="dashboard-topbar__title">Noteroo</span>
+              </div>
+              <div className="dashboard-topbar__search">
+                <SearchBar
+                  searchQuery={searchQuery}
+                  onSearchChange={setSearchQuery}
+                  user={user}
+                  onOpenProfile={() => setIsProfileOpen(true)}
+                  onLogout={handleLogout}
+                  onNavigate={(targetView) => {
+                    setActiveNote(null)
+                    setView(targetView)
+                  }}
+                />
+              </div>
+            </header>
             {isLoading ? (
               <div className="loading-state">
                 <ThinkingPill text="Loading...." />
@@ -454,7 +460,6 @@ function App() {
                 onNoteClick={handleNoteClick}
                 onTogglePin={handleTogglePinNote}
                 onDeleteNote={handleRequestDelete}
-                onChangeColor={handleChangeNoteColor}
                 onResetCheckmarks={handleResetCheckmarks}
                 searchQuery={searchQuery}
                 onManageCategories={() => setView('categories')}
@@ -475,6 +480,7 @@ function App() {
               fetchNotes()
               fetchCategories()
             }}
+            onBack={() => setView('dashboard')}
           />
         ) : isCreatingNote || !activeNote ? (
           <NoteEditorSkeleton onBack={handleBack} />
@@ -493,6 +499,21 @@ function App() {
           </ErrorBoundary>
         )}
       </main>
+
+      {view === 'dashboard' && (
+        <button
+          type="button"
+          className="floating-add-btn"
+          onClick={createNote}
+          title="New Note"
+          aria-label="Create new note"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </button>
+      )}
 
       {showScrollTop && (
         <button
