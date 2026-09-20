@@ -2,13 +2,13 @@ import { useState, useRef, useEffect } from 'react'
 import { fastTap } from '../lib/fastTap'
 
 const CARD_COLORS = [
-  { name: 'orange', label: 'Orange', hex: '#FFB84C' },
-  { name: 'salmon', label: 'Salmon', hex: '#FF8260' },
-  { name: 'green', label: 'Green', hex: '#D4EC73' },
-  { name: 'purple', label: 'Purple', hex: '#AC82FF' },
-  { name: 'blue', label: 'Blue', hex: '#22D3EE' },
-  { name: 'pink', label: 'Pink', hex: '#FF80A2' },
-  { name: 'yellow', label: 'Yellow', hex: '#FFD449' },
+  { name: 'orange', label: 'Orange', hex: '#FFEDD5' },
+  { name: 'salmon', label: 'Salmon', hex: '#FFE4D6' },
+  { name: 'green', label: 'Green', hex: '#DCFCE7' },
+  { name: 'purple', label: 'Purple', hex: '#EDE9FE' },
+  { name: 'blue', label: 'Blue', hex: '#E0F2FE' },
+  { name: 'pink', label: 'Pink', hex: '#FFE4E6' },
+  { name: 'yellow', label: 'Yellow', hex: '#FEF3C7' },
 ]
 
 function hasChecklists(note) {

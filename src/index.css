@@ -18,18 +18,20 @@
   --accent-hover: #6d28d9;
 
   /* Colors - Sticky Note Cards */
-  --note-orange: #FFB74D;
-  --note-orange-dark: #F5A623;
-  --note-salmon: #FF8A80;
-  --note-salmon-dark: #FF6B6B;
-  --note-green: #81C784;
-  --note-green-dark: #66BB6A;
-  --note-blue: #64B5F6;
-  --note-blue-dark: #42A5F5;
-  --note-pink: #F48FB1;
-  --note-pink-dark: #EC407A;
-  --note-yellow: #FFF176;
-  --note-yellow-dark: #FFEE58;
+  --note-orange: #FFEDD5;
+  --note-orange-dark: #FDBA74;
+  --note-salmon: #FFE4D6;
+  --note-salmon-dark: #FCA5A5;
+  --note-green: #DCFCE7;
+  --note-green-dark: #86EFAC;
+  --note-blue: #E0F2FE;
+  --note-blue-dark: #7DD3FC;
+  --note-pink: #FFE4E6;
+  --note-pink-dark: #FDA4AF;
+  --note-purple: #EDE9FE;
+  --note-purple-dark: #C4B5FD;
+  --note-yellow: #FEF3C7;
+  --note-yellow-dark: #FDE047;
 
   /* Shadows */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -315,14 +317,14 @@ textarea,
   outline-offset: 2px;
 }
 
-/* Card Colors - Solid Vibrant Modern Palette */
-.note-card--orange { background: #FFB84C; }
-.note-card--salmon { background: #FF8260; }
-.note-card--green  { background: #D4EC73; }
-.note-card--purple { background: #AC82FF; }
-.note-card--blue   { background: #22D3EE; }
-.note-card--pink   { background: #FF80A2; }
-.note-card--yellow { background: #FFD449; }
+/* Card Colors - Aesthetic Pastel Palette */
+.note-card--orange { background: #FFEDD5; }
+.note-card--salmon { background: #FFE4D6; }
+.note-card--green  { background: #DCFCE7; }
+.note-card--purple { background: #EDE9FE; }
+.note-card--blue   { background: #E0F2FE; }
+.note-card--pink   { background: #FFE4E6; }
+.note-card--yellow { background: #FEF3C7; }
 
 /* Card Content */
 .note-card__content {
@@ -340,14 +342,13 @@ textarea,
   padding: 0.18rem 0.55rem;
   height: 22px;
   border-radius: var(--radius-full);
-  font-size: 0.65rem;
-  font-weight: 700;
+  font-size: 0.72rem;
+  font-weight: 600;
   color: #111827;
   border: 1px solid rgba(0, 0, 0, 0.08);
   background: rgba(255, 255, 255, 0.65);
   backdrop-filter: blur(8px);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.01em;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   pointer-events: none;
 }
@@ -410,17 +411,17 @@ textarea,
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: none;
-  background: #111827;
-  color: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: #ffffff;
+  color: #111827;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   opacity: 0;
   transform: scale(0.8);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  transition: opacity var(--transition), transform var(--transition), background var(--transition);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: opacity var(--transition), transform var(--transition), background var(--transition), box-shadow var(--transition);
 }
 
 .note-card__edit-btn--visible {
@@ -434,8 +435,9 @@ textarea,
     transform: scale(1);
   }
   .note-card__edit-btn:hover {
-    background: #000000;
+    background: #ffffff;
     transform: scale(1.08);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
   }
 }
 
@@ -1401,6 +1403,7 @@ select, .editor-category-select {
 .color-picker__swatch--orange { background: var(--note-orange); }
 .color-picker__swatch--salmon { background: var(--note-salmon); }
 .color-picker__swatch--green  { background: var(--note-green); }
+.color-picker__swatch--purple { background: var(--note-purple); }
 .color-picker__swatch--blue   { background: var(--note-blue); }
 .color-picker__swatch--pink   { background: var(--note-pink); }
 .color-picker__swatch--yellow { background: var(--note-yellow); }
@@ -2232,13 +2235,14 @@ select, .editor-category-select {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: #111827;
-  color: #fbbf24;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.18);
-  border: none;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #d97706;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .note-card--pinned {
