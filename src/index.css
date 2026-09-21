@@ -338,7 +338,7 @@ textarea,
 /* ========== NOTE CARD (Aesthetic Pastel Tinted Cards) ========== */
 .note-card {
   border-radius: 20px;
-  padding: 0.95rem 1rem 0.85rem;
+  padding: 0.85rem 1rem 0.8rem;
   min-height: 160px;
   display: flex;
   flex-direction: column;
@@ -431,7 +431,7 @@ textarea,
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  margin-bottom: 0.65rem;
+  margin-bottom: 0.2rem;
   min-height: 24px;
 }
 
@@ -513,7 +513,7 @@ textarea,
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  padding: 0.35rem 0.15rem 0;
+  padding: 0 0.15rem 0;
   pointer-events: none;
 }
 
