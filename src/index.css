@@ -3096,10 +3096,21 @@ ul[data-type="taskList"] li[data-checked="true"] > div,
   padding: 8px;
   z-index: 1000;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   gap: 6px;
-  min-width: 156px;
   animation: dropdownFadeIn 0.15s ease;
+}
+
+@media (max-width: 480px) {
+  .highlight-color-picker {
+    left: auto;
+    right: 0;
+    max-width: calc(100vw - 24px);
+  }
+  .highlight-color-option {
+    width: 28px;
+    height: 28px;
+  }
 }
 
 .highlight-color-option {

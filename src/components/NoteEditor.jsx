@@ -18,11 +18,18 @@ import { getCategoryColorName } from '../lib/colors'
 
 const HIGHLIGHT_COLORS = [
   { name: 'Yellow', color: '#fef08a' },
+  { name: 'Lime', color: '#d9f99d' },
   { name: 'Green', color: '#bbf7d0' },
-  { name: 'Pink', color: '#fbcfe8' },
+  { name: 'Teal', color: '#99f6e4' },
+  { name: 'Cyan', color: '#a5f3fc' },
   { name: 'Blue', color: '#bfdbfe' },
+  { name: 'Indigo', color: '#c7d2fe' },
   { name: 'Purple', color: '#e9d5ff' },
+  { name: 'Pink', color: '#fbcfe8' },
+  { name: 'Rose', color: '#fecdd3' },
+  { name: 'Red', color: '#fca5a5' },
   { name: 'Orange', color: '#fed7aa' },
+  { name: 'Amber', color: '#fde68a' },
 ]
 
 function transformSelectionCase(editor, mode = 'toggle') {
