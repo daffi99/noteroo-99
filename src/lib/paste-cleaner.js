@@ -1,24 +1,77 @@
 /**
  * Utilities to clean and normalize pasted content in TipTap editor,
- * specifically handling Google Docs clipboard HTML.
+ * specifically handling Google Docs clipboard HTML and excessive line breaks.
  */
 
+/**
+ * Checks if HTML originated from Google Docs clipboard.
+ */
+export function isGoogleDocsHtml(html) {
+  if (!html || typeof html !== 'string') return false
+  return (
+    html.includes('docs-internal-guid') ||
+    /id=['"]?docs-internal-guid/i.test(html) ||
+    (/margin-top:\s*0(?:pt|px)?/i.test(html) && /margin-bottom:\s*0(?:pt|px)?/i.test(html)) ||
+    (/dir=['"]ltr['"]/i.test(html) && /line-height:\s*1\.[0-9]+/i.test(html))
+  )
+}
+
+/**
+ * Checks if a paragraph element has explicit zero vertical margin.
+ */
+function isExplicitZeroMargin(p) {
+  const style = p.getAttribute('style') || ''
+  if (!/margin/i.test(style)) return false
+  const mbMatch = style.match(/margin-bottom:\s*([0-9.]+)(pt|px|em|rem)?/i)
+  const mtMatch = style.match(/margin-top:\s*([0-9.]+)(pt|px|em|rem)?/i)
+  const marginMatch = style.match(/(?:^|;)\s*margin:\s*0(?:pt|px)?(?:\s+0(?:pt|px)?)*\s*(?:;|$)/i)
+  if (marginMatch) return true
+  if (mbMatch && mtMatch) {
+    return parseFloat(mbMatch[1]) === 0 && parseFloat(mtMatch[1]) === 0
+  }
+  return false
+}
+
+/**
+ * Checks if a paragraph element is empty (only whitespace, &nbsp;, empty spans, or <br>).
+ */
+function isEmptyPara(p) {
+  // If it has media, embeds, horizontal rules, or tables, it's not empty
+  if (p.querySelector('img, svg, canvas, video, audio, iframe, hr, table, input')) {
+    return false
+  }
+  // Check text content ignoring all whitespace, non-breaking spaces, zero-width spaces
+  const text = (p.textContent || '').replace(/[\s\u00a0\u200b\r\n\t]/g, '')
+  return text.length === 0
+}
+
+/**
+ * Cleans pasted HTML:
+ * 1. Unwraps Google Docs wrapper <b>/<span id="docs-internal-guid-...">
+ * 2. Unwraps <b>/<strong> with font-weight: normal (Google Docs pseudo-wrapper)
+ * 3. Removes empty spacer paragraphs
+ * 4. Merges consecutive sibling zero-margin paragraphs (Google Docs tight lines) with <br>
+ * 5. Cleans up leading/trailing <br> inside paragraphs and collapses multiple <br>
+ * 6. Strips white-space: pre / pre-wrap inline styles from spans to prevent stray line breaks
+ */
 export function cleanPastedHtml(html) {
   if (!html || typeof html !== 'string') return html
 
-  // Detect Google Docs clipboard markup
-  const isGoogleDocs =
-    html.includes('docs-internal-guid') ||
-    (html.includes('margin-top:0pt') && html.includes('margin-bottom:0pt'))
+  // Check if we should process this HTML (Google Docs or contains empty paragraphs / excessive breaks)
+  const isGDocs = isGoogleDocsHtml(html)
+  const hasParagraphs = /<p[\s>]/i.test(html)
+  const hasBreaks = /<br[\s>/]/i.test(html)
 
-  if (!isGoogleDocs) return html
+  if (!isGDocs && !hasParagraphs && !hasBreaks) {
+    return html
+  }
 
   try {
     const parser = new DOMParser()
     const doc = parser.parseFromString(html, 'text/html')
 
     // 1. Unwrap Google Docs wrapper <b id="docs-internal-guid-..." style="font-weight:normal;">
-    // or <span id="docs-internal-guid-..."> so the bold tag does not bold everything
+    // or <span id="docs-internal-guid-..."> so bold tag does not bold everything
     const docGuidWrappers = doc.querySelectorAll('[id^="docs-internal-guid"]')
     docGuidWrappers.forEach((wrapper) => {
       const parent = wrapper.parentNode
@@ -30,73 +83,156 @@ export function cleanPastedHtml(html) {
       }
     })
 
-    // Helper: check if a paragraph has zero margin (Google Docs uses margin-top:0pt;margin-bottom:0pt)
-    const isZeroMargin = (p) => {
-      const style = p.getAttribute('style') || ''
-      const mbMatch = style.match(/margin-bottom:\s*([0-9.]+)(pt|px|em|rem)?/i)
-      const mtMatch = style.match(/margin-top:\s*([0-9.]+)(pt|px|em|rem)?/i)
-      const mb = mbMatch ? parseFloat(mbMatch[1]) : 0
-      const mt = mtMatch ? parseFloat(mtMatch[1]) : 0
-      return mb === 0 && mt === 0
+    // Unwrap <b> or <strong> that has font-weight: normal / 400 (Google Docs wrapper)
+    const normalBolds = doc.querySelectorAll('b, strong')
+    normalBolds.forEach((el) => {
+      const style = el.getAttribute('style') || ''
+      if (/font-weight:\s*(normal|400)/i.test(style)) {
+        const parent = el.parentNode
+        if (parent) {
+          while (el.firstChild) {
+            parent.insertBefore(el.firstChild, el)
+          }
+          parent.removeChild(el)
+        }
+      }
+    })
+
+    // 2. Strip white-space: pre-wrap and white-space: pre from spans to prevent HTML newlines turning into line breaks
+    if (isGDocs) {
+      const styledElements = doc.querySelectorAll('[style*="white-space"]')
+      styledElements.forEach((el) => {
+        el.style.whiteSpace = ''
+        if (!el.getAttribute('style')) {
+          el.removeAttribute('style')
+        }
+      })
     }
 
-    // Helper: check if a paragraph is empty (only whitespace/nbsp/empty br)
-    const isEmptyPara = (p) => {
-      const text = (p.textContent || '').replace(/[\s\u00a0\u200b\r\n]/g, '')
-      if (text.length > 0) return false
-      return !p.querySelector('img, svg, canvas, video, audio, iframe')
-    }
+    // 3. Remove standalone <br> directly between block elements (e.g. <p>...</p><br><p>...</p>)
+    const allBrs = Array.from(doc.querySelectorAll('br'))
+    allBrs.forEach((br) => {
+      const parent = br.parentElement
+      if (!parent) return
+      const parentTag = parent.tagName.toUpperCase()
+      if (parentTag === 'BODY') {
+        br.remove()
+      } else if (
+        parentTag === 'DIV' &&
+        (br.previousElementSibling?.tagName === 'P' || br.nextElementSibling?.tagName === 'P')
+      ) {
+        br.remove()
+      }
+    })
 
-    // 2. Merge consecutive sibling zero-margin paragraphs into single paragraphs with <br>
+    // 4. Process paragraphs: remove empty paragraphs, merge zero-margin lines (Google Docs)
     const paragraphs = Array.from(doc.querySelectorAll('p'))
     let currentLeader = null
 
     for (let i = 0; i < paragraphs.length; i++) {
       const p = paragraphs[i]
-      const empty = isEmptyPara(p)
-      const zeroMargin = isZeroMargin(p)
 
-      // Do not merge paragraphs inside lists or tables
-      const parentTag = p.parentElement?.tagName?.toUpperCase()
-      if (parentTag === 'LI' || parentTag === 'TD' || parentTag === 'TH') {
+      // Skip elements inside <pre>
+      if (p.closest('pre')) {
         currentLeader = null
         continue
       }
+
+      // Do not remove or merge paragraphs inside table cells or list items
+      const parentTag = p.parentElement?.tagName?.toUpperCase()
+      const isListOrTable = parentTag === 'LI' || parentTag === 'TD' || parentTag === 'TH'
+
+      const empty = isEmptyPara(p)
 
       if (empty) {
-        // An empty paragraph represents an intentional paragraph break
-        currentLeader = null
-        continue
-      }
-
-      if (!zeroMargin) {
-        // Non-zero margin paragraph: keep as separate block
-        currentLeader = null
-        continue
-      }
-
-      // Check if p is an immediate next element sibling of currentLeader within the same parent
-      if (
-        currentLeader &&
-        p.parentElement === currentLeader.parentElement &&
-        p.previousElementSibling === currentLeader
-      ) {
-        // Append <br> line break
-        currentLeader.appendChild(doc.createElement('br'))
-        // Move all children of p into currentLeader
-        while (p.firstChild) {
-          currentLeader.appendChild(p.firstChild)
+        if (!isListOrTable) {
+          // Remove empty spacer paragraph completely
+          p.remove()
         }
-        // Remove p from DOM
-        p.remove()
-      } else {
-        currentLeader = p
+        // An empty paragraph resets leader so subsequent paragraph starts fresh
+        currentLeader = null
+        continue
+      }
+
+      if (isListOrTable) {
+        currentLeader = null
+        continue
+      }
+
+      // For Google Docs: merge consecutive sibling zero-margin paragraphs with <br>
+      if (isGDocs) {
+        const zeroMargin = isExplicitZeroMargin(p)
+
+        if (!zeroMargin) {
+          currentLeader = null
+          continue
+        }
+
+        // Check if p is an immediate next element sibling of currentLeader within the same parent
+        if (
+          currentLeader &&
+          p.parentElement === currentLeader.parentElement &&
+          p.previousElementSibling === currentLeader
+        ) {
+          currentLeader.appendChild(doc.createElement('br'))
+          while (p.firstChild) {
+            currentLeader.appendChild(p.firstChild)
+          }
+          p.remove()
+          continue
+        } else {
+          currentLeader = p
+          continue
+        }
       }
     }
 
+    // 5. Clean up leading/trailing <br> inside paragraphs and collapse consecutive <br>
+    const remainingParas = doc.querySelectorAll('p, li, blockquote')
+    remainingParas.forEach((container) => {
+      // Remove leading <br>
+      while (container.firstChild && container.firstChild.nodeName === 'BR') {
+        container.removeChild(container.firstChild)
+      }
+      // Remove trailing <br>
+      while (container.lastChild && container.lastChild.nodeName === 'BR') {
+        container.removeChild(container.lastChild)
+      }
+
+      // Collapse consecutive <br> tags within the container
+      let prevWasBr = false
+      const children = Array.from(container.childNodes)
+      for (const node of children) {
+        if (node.nodeName === 'BR') {
+          if (prevWasBr) {
+            node.remove()
+          } else {
+            prevWasBr = true
+          }
+        } else if (node.nodeType === 3 && node.textContent.trim() === '') {
+          // Whitespace between <br> tags: keep traversing
+          continue
+        } else {
+          prevWasBr = false
+        }
+      }
+    })
+
     return doc.body.innerHTML
   } catch (err) {
-    console.error('Failed to clean Google Docs pasted HTML:', err)
+    console.error('Failed to clean pasted HTML:', err)
     return html
   }
+}
+
+/**
+ * Normalizes pasted plain text to eliminate excessive line breaks (3+ newlines -> 2).
+ */
+export function cleanPastedText(text) {
+  if (!text || typeof text !== 'string') return text
+  // Normalize CRLF to LF
+  let clean = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+  // Collapse 3 or more consecutive newlines into 2 (standard paragraph break)
+  clean = clean.replace(/\n{3,}/g, '\n\n')
+  return clean
 }
