@@ -131,6 +131,7 @@ export function cleanPastedHtml(html) {
     // - Remove leading empty paragraphs at document start
     const paragraphs = Array.from(doc.querySelectorAll('p'))
     let currentLeader = null
+    let hasSeenContent = false
     let hasPrecedingEmpty = false
 
     for (let i = 0; i < paragraphs.length; i++) {
@@ -139,6 +140,7 @@ export function cleanPastedHtml(html) {
       // Skip elements inside <pre>
       if (p.closest('pre')) {
         currentLeader = null
+        hasSeenContent = true
         hasPrecedingEmpty = false
         continue
       }
@@ -157,12 +159,12 @@ export function cleanPastedHtml(html) {
 
         // If at the very start before any content, or if we already have an empty paragraph,
         // remove the extra empty paragraph
-        if (!currentLeader && !hasPrecedingEmpty) {
-          p.remove()
-        } else if (hasPrecedingEmpty) {
+        if (!hasSeenContent || hasPrecedingEmpty) {
           p.remove()
         } else {
           // Keep this single empty paragraph as an intentional blank line
+          p.removeAttribute('style')
+          p.removeAttribute('dir')
           p.innerHTML = '<br>'
           hasPrecedingEmpty = true
         }
@@ -172,6 +174,7 @@ export function cleanPastedHtml(html) {
       }
 
       // Non-empty paragraph
+      hasSeenContent = true
       hasPrecedingEmpty = false
 
       if (isListOrTable) {
